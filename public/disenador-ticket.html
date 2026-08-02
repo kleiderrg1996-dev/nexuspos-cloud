@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diseñador de Ticket | NexusPOS</title>
+  <link href="/css/output.css" rel="stylesheet">
+  <link href="/css/theme.css" rel="stylesheet">
+  <link href="/css/toast.css" rel="stylesheet">
+  <script src="/js/toast.js"></script>
+  <style>
+    body {
+      overflow: hidden;
+      height: 100vh;
+      background: #f8fafc;
+    }
+
+    .designer-layout {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      height: calc(100vh - 64px);
+    }
+
+    .sidebar {
+      background: white;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .preview-area {
+      background: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: #2563eb;
+      border-bottom-color: #2563eb;
+      background: #eff6ff;
+    }
+
+    .control-group {
+      padding: 20px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .control-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .input-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-control:focus {
+      border-color: #3b82f6;
+    }
+
+    .toggle-control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .4s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px; width: 14px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .align-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .align-btn {
+      flex: 1;
+      padding: 8px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .align-btn.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .preview-frame {
+      background: white;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .code-editor-area {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+    }
+
+    .code-editor {
+      flex: 1;
+      width: 100%;
+      background: #1e293b;
+      color: #e2e8f0;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      padding: 15px;
+      border: none;
+      outline: none;
+      resize: none;
+    }
+
+    .toolbar {
+      height: 64px;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+  
+  <header class="toolbar dark:bg-gray-800 dark:border-gray-700">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-blue-600 rounded-lg text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">Diseñador de Ticket</h1>
+        <p class="text-xs text-gray-500">Diseña de forma visual o con código</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <button onclick="resetTemplate()" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-red-600 transition-colors">
+        Restaurar Fábrica
+      </button>
+      <button onclick="saveAll()" class="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+        </svg>
+        Guardar Todo
+      </button>
+      <button onclick="window.close()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="designer-layout">
+    <aside class="sidebar h-full">
+      <div class="sidebar-tabs">
+        <button id="tabVisual" onclick="switchTab('visual')" class="tab-btn active">Diseño Visual</button>
+        <button id="tabCode" onclick="switchTab('code')" class="tab-btn">Código Avanzado</button>
+      </div>
+
+      <!-- TAPA VISUAL -->
+      <div id="visualControls" class="flex-1 overflow-y-auto">
+        <div class="control-group">
+          <label class="control-label">Tipo de Letra</label>
+          <select id="fontFamily" class="input-control" onchange="updateDesign()">
+            <option value="'Courier New', Courier, monospace">Monoespaciada (Clásica)</option>
+            <option value="'Arial', sans-serif">Arial (Moderna)</option>
+            <option value="'Inter', sans-serif">Inter (Sleek)</option>
+            <option value="'Georgia', serif">Georgia (Elegante)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Tamaño de Letra (<span id="fontSizeDisplay">12</span>px)</label>
+          <input type="range" id="fontSize" min="8" max="24" step="1" value="12" class="w-full" oninput="updateDesign()">
+        </div>
+
+        <div class="control-group">
+          <div class="toggle-control">
+            <span class="control-label mb-0">Mostrar Logotipo</span>
+            <label class="switch">
+              <input type="checkbox" id="showLogo" checked onchange="updateDesign()">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="logoSizeGroup" class="mt-4">
+            <label class="control-label">Tamaño del Logo (<span id="logoSizeDisplay">45</span>%)</label>
+            <input type="range" id="logoSize" min="10" max="100" step="5" value="45" class="w-full" oninput="updateDesign()">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Alineación Cabecera</label>
+          <div class="align-btns">
+            <button onclick="setAlign('header', 'left')" id="btnHeaderLeft" class="align-btn">Izq</button>
+            <button onclick="setAlign('header', 'center')" id="btnHeaderCenter" class="align-btn active">Centro</button>
+            <button onclick="setAlign('header', 'right')" id="btnHeaderRight" class="align-btn">Der</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="toggle-control">
+            <span class="control-label mb-0">Info del Cliente</span>
+            <label class="switch">
+              <input type="checkbox" id="showClient" checked onchange="updateDesign()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="toggle-control">
+            <span class="control-label mb-0">Tasa de Cambio (BCV)</span>
+            <label class="switch">
+              <input type="checkbox" id="showTasa" checked onchange="updateDesign()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Alineación Pie de Página</label>
+          <div class="align-btns">
+            <button onclick="setAlign('footer', 'left')" id="btnFooterLeft" class="align-btn">Izq</button>
+            <button onclick="setAlign('footer', 'center')" id="btnFooterCenter" class="align-btn active">Centro</button>
+            <button onclick="setAlign('footer', 'right')" id="btnFooterRight" class="align-btn">Der</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAPA CÓDIGO -->
+      <div id="codeArea" class="code-editor-area">
+        <textarea id="codeEditor" class="code-editor" spellcheck="false"></textarea>
+      </div>
+    </aside>
+
+    <main class="preview-area">
+      <div class="mb-4 flex items-center gap-4 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+         <span class="text-xs font-bold text-gray-400 px-2">ANCHO:</span>
+         <button onclick="setPaperSize(58)" id="btnSize58" class="px-4 py-1.5 text-xs font-bold rounded-md transition-all border border-gray-200 hover:bg-gray-50">58mm</button>
+         <button onclick="setPaperSize(80)" id="btnSize80" class="px-4 py-1.5 text-xs font-bold rounded-md transition-all border border-blue-200 bg-blue-50 text-blue-600">80mm</button>
+         <div class="h-4 w-px bg-gray-200 mx-2"></div>
+         <span class="text-xs text-gray-500 font-medium">Vista Previa Real</span>
+      </div>
+      <iframe id="previewFrame" class="preview-frame" style="width: 340px; height: calc(100vh - 160px);"></iframe>
+    </main>
+  </div>
+
+  <script>
+    let currentDesign = {
+      fontFamily: "'Courier New', Courier, monospace",
+      fontSize: 12,
+      logoSize: 45,
+      headerAlign: "center",
+      footerAlign: "center",
+      showLogo: true,
+      showClient: true,
+      showTasa: true
+    };
+
+    let ticketSize = 80;
+    let htmlTemplate = "";
+    
+    const previewFrame = document.getElementById('previewFrame');
+    const codeEditor = document.getElementById('codeEditor');
+
+    const mockData = {
+      saleId: '1024',
+      businessName: 'NEXUS POS DEMO',
+      headerText: 'Calle Principal #123<br>RIF: J-12345678-9',
+      dateStr: new Date().toLocaleDateString(),
+      timeStr: new Date().toLocaleTimeString(),
+      clientInfo: '<div class="client-info"><div>CLIENTE: JUAN PEREZ</div><div>C.I./RIF: 12.345.678</div></div>',
+      productsHtml: `
+        <tr><td class="qty">2</td><td class="item">HARINA PAN</td><td class="price text-right">80.00</td></tr>
+        <tr><td class="qty">1</td><td class="item">REFRESCO 2L (E)</td><td class="price text-right">45.00</td></tr>
+      `,
+      totalVes: '125.00',
+      totalUsd: '3.47',
+      bcvRate: '36.0000',
+      paymentsHtml: '<div class="row"><span>Efectivo Bs:</span><span>125.00</span></div>',
+      extraInfoHtml: '',
+      footerText: '¡Gracias por su compra!<br>Vuelva pronto.',
+      logoHtml: '<div style="background:#ddd; width:100px; height:50px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:10px; color:#666;">LOGO</div>'
+    };
+
+    async function init() {
+      await loadEverything();
+      updateDesignUI();
+      updatePreview();
+    }
+
+    async function loadEverything() {
+      try {
+        const [designRes, templateRes] = await Promise.all([
+          fetch('/api/sales/settings/design'),
+          fetch('/api/sales/settings/template')
+        ]);
+        
+        const designData = await designRes.json();
+        currentDesign = { ...currentDesign, ...designData };
+
+        const templateData = await templateRes.json();
+        htmlTemplate = templateData.template || '';
+        codeEditor.value = htmlTemplate;
+
+        // Cargar ticketSize desde la config general si es necesario
+      } catch (err) {
+        console.error('Error loadEverything:', err);
+        Toast.show("Error cargando configuración", "error");
+      }
+    }
+
+    function switchTab(tab) {
+      document.getElementById('tabVisual').classList.toggle('active', tab === 'visual');
+      document.getElementById('tabCode').classList.toggle('active', tab === 'code');
+      document.getElementById('visualControls').style.display = tab === 'visual' ? 'block' : 'none';
+      document.getElementById('codeArea').style.display = tab === 'code' ? 'flex' : 'none';
+    }
+
+    function setAlign(section, align) {
+      currentDesign[section + 'Align'] = align;
+      updateDesignUI();
+      updatePreview();
+    }
+
+    function setPaperSize(size) {
+      ticketSize = size;
+      document.getElementById('btnSize58').className = size === 58 ? 'px-4 py-1.5 text-xs font-bold rounded-md transition-all border border-blue-200 bg-blue-50 text-blue-600' : 'px-4 py-1.5 text-xs font-bold rounded-md transition-all border border-gray-200 hover:bg-gray-50';
+      document.getElementById('btnSize80').className = size === 80 ? 'px-4 py-1.5 text-xs font-bold rounded-md transition-all border border-blue-200 bg-blue-50 text-blue-600' : 'px-4 py-1.5 text-xs font-bold rounded-md transition-all border border-gray-200 hover:bg-gray-50';
+      previewFrame.style.width = size === 58 ? '260px' : '340px';
+      updatePreview();
+    }
+
+    function updateDesign() {
+      currentDesign.fontFamily = document.getElementById('fontFamily').value;
+      currentDesign.fontSize = parseInt(document.getElementById('fontSize').value);
+      currentDesign.showLogo = document.getElementById('showLogo').checked;
+      currentDesign.logoSize = parseInt(document.getElementById('logoSize').value);
+      currentDesign.showClient = document.getElementById('showClient').checked;
+      currentDesign.showTasa = document.getElementById('showTasa').checked;
+
+      document.getElementById('fontSizeDisplay').textContent = currentDesign.fontSize;
+      document.getElementById('logoSizeDisplay').textContent = currentDesign.logoSize;
+      
+      updatePreview();
+    }
+
+    function updateDesignUI() {
+      document.getElementById('fontFamily').value = currentDesign.fontFamily;
+      document.getElementById('fontSize').value = currentDesign.fontSize;
+      document.getElementById('fontSizeDisplay').textContent = currentDesign.fontSize;
+      document.getElementById('showLogo').checked = currentDesign.showLogo;
+      document.getElementById('logoSize').value = currentDesign.logoSize;
+      document.getElementById('logoSizeDisplay').textContent = currentDesign.logoSize;
+      document.getElementById('showClient').checked = currentDesign.showClient;
+      document.getElementById('showTasa').checked = currentDesign.showTasa;
+
+      // Aliner botones
+      ['header', 'footer'].forEach(sec => {
+        ['left', 'center', 'right'].forEach(pos => {
+          const btn = document.getElementById('btn' + sec.charAt(0).toUpperCase() + sec.slice(1) + pos.charAt(0).toUpperCase() + pos.slice(1));
+          if (btn) btn.classList.toggle('active', currentDesign[sec + 'Align'] === pos);
+        });
+      });
+    }
+
+    function updatePreview() {
+      let content = (document.getElementById('codeArea').style.display === 'flex') ? codeEditor.value : htmlTemplate;
+      
+      const widthCss = ticketSize + 'mm';
+      const fontSizePx = currentDesign.fontSize + 'px';
+
+      const replacements = {
+        ...mockData,
+        fontSize: fontSizePx,
+        widthCss: widthCss,
+        fontFamily: currentDesign.fontFamily,
+        logoDisplay: currentDesign.showLogo ? 'block' : 'none',
+        logoSize: currentDesign.logoSize,
+        headerAlign: currentDesign.headerAlign,
+        footerAlign: currentDesign.footerAlign,
+        clientDisplay: currentDesign.showClient ? 'block' : 'none',
+        tasaDisplay: currentDesign.showTasa ? 'block' : 'none'
+      };
+
+      for (const [key, value] of Object.entries(replacements)) {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        content = content.replace(regex, value);
+      }
+      
+      const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+      doc.open();
+      doc.write(content);
+      doc.close();
+    }
+
+    async function saveAll() {
+      try {
+        const templateToSave = codeEditor.value;
+        const [designSave, templateSave] = await Promise.all([
+          fetch('/api/sales/settings/design', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentDesign)
+          }),
+          fetch('/api/sales/settings/template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ template: templateToSave })
+          })
+        ]);
+
+        if (designSave.ok && templateSave.ok) {
+          Toast.show("Todos los cambios guardados", "success");
+          htmlTemplate = templateToSave; // Actualizar base
+        } else {
+          Toast.show("Error al guardar algunos cambios", "error");
+        }
+      } catch (err) {
+        Toast.show("Error de conexión", "error");
+      }
+    }
+
+    async function resetTemplate() {
+      if (!confirm('¿Restablecer todo a fábrica? Se perderán tus ajustes visuales y cambios de código.')) return;
+      try {
+        await fetch('/api/sales/settings/template/reset', { method: 'POST' });
+        // Para el diseño visual, mandamos un POST con los valores por defecto
+        const defaultDesign = {
+          fontFamily: "'Courier New', Courier, monospace",
+          fontSize: 12, logoSize: 45, headerAlign: "center", footerAlign: "center",
+          showLogo: true, showClient: true, showTasa: true
+        };
+        await fetch('/api/sales/settings/design', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(defaultDesign)
+        });
+        
+        Toast.show("Restauración completada", "info");
+        window.location.reload();
+      } catch (err) {
+        Toast.show("Error al restaurar", "error");
+      }
+    }
+
+    codeEditor.addEventListener('input', () => {
+      clearTimeout(window.previewTimeout);
+      window.previewTimeout = setTimeout(updatePreview, 500);
+    });
+
+    init();
+  </script>
+</body>
+</html>

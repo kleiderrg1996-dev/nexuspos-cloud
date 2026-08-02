@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Kardex API</title>
+</head>
+
+<body>
+    <h1>Testing Kardex API</h1>
+    <button onclick="test()">Fetch Kardex Data</button>
+    <pre id="output"></pre>
+    <script>
+        async function test() {
+            const out = document.getElementById('output');
+            out.textContent = 'Fetching...';
+            try {
+                const res = await fetch('/api/kardex');
+                const data = await res.json();
+                out.textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                out.textContent = 'Error: ' + err.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

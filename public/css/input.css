@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .input-text {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  .sidebar-collapsed .sidebar-text {
+    @apply hidden;
+  }
+  
+  .sidebar-collapsed .sidebar-link {
+    @apply justify-center;
+  }
+
+  .sidebar-collapsed .brand-logo-container span {
+    @apply hidden;
+  }
+  
+  .sidebar-collapsed .sidebar-link svg {
+    @apply mr-0;
+  }
+
+  .sidebar-collapsed .sidebar-header {
+    @apply flex-col-reverse items-center;
+  }
+
+  .sidebar-collapsed .brand-logo-container {
+    @apply mt-4 justify-center w-full;
+  }
+}

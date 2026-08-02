@@ -1,0 +1,820 @@
+/* theme.css - Global Styles, Dark Mode & Overrides */
+
+:root {
+  --bg-primary: #e2e8f0; /* Slate 200 - Más oscuro para evitar el blanco deslumbrante */
+  --bg-secondary: #f8fafc; /* Slate 50 - Blanco roto para las tarjetas */
+  --text-primary: #0f172a; /* Slate 900 - Un negro/gris más suave pero con alto contraste */
+  --text-secondary: #475569; /* Slate 600 */
+  --accent-color: #2563eb;
+  --border-color: #cbd5e1; /* Slate 300 - Borde más definido */
+
+  /* Ultra-Vibrant Gradients */
+  --grad-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --grad-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  --grad-danger: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  --grad-warning: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  --grad-info: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  --grad-premium: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  --whatsapp-green: #25D366;
+  --whatsapp-hover: #128C7E;
+}
+
+body.dark-mode {
+  --bg-primary: #020617; /* Deeper slate */
+  --bg-secondary: #0f172a; /* Slate 900 */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-color: #3b82f6;
+  --border-color: #1e293b;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Global Nexus UI Tokens */
+.rounded-nexus-sm {
+  border-radius: 1rem;
+}
+
+/* Botón de cierre Nexus (Círculo rojo con X blanca) */
+.btn-close-nexus {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background-color: #ef4444 !important;
+  color: white !important;
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+  cursor: pointer;
+  border: 2px solid white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.btn-close-nexus:hover {
+  background-color: #dc2626 !important;
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+.btn-close-nexus svg {
+  width: 22px;
+  height: 22px;
+  stroke: white;
+  stroke-width: 3;
+}
+
+.rounded-nexus {
+  border-radius: 2rem;
+}
+
+.rounded-nexus-lg {
+  border-radius: 3rem;
+}
+
+.pill {
+  border-radius: 9999px;
+}
+
+.input-text {
+  border-radius: 2rem !important;
+  padding: 0 1.25rem !important; /* Aumentado ligeramente para mejor aire lateral */
+  height: 2.8rem !important;
+  line-height: normal !important; /* Cambiado a normal para evitar cortes por debajo en algunos navegadores */
+  display: flex !important;
+  align-items: center !important;
+  font-size: 0.95rem !important; /* Un toque más grande para legibilidad */
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  outline: none !important;
+}
+
+/* Ajuste específico para selects para que el texto no se corte */
+select.input-text {
+  padding-right: 2.5rem !important;
+  line-height: normal !important;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2rem;
+  min-width: 160px; /* Asegurar ancho mínimo para textos largos como USD (Personalizada) */
+}
+
+/* Estilo para selectores de moneda integrados con inputs */
+.select-currency-inline {
+  height: 2.8rem !important;
+  border-radius: 2rem !important;
+  padding: 0 2.2rem 0 1rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+.input-text:focus {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+.btn-pill {
+  border-radius: 9999px !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.btn-pill:active {
+  transform: scale(0.95);
+}
+
+.card-nexus {
+  border-radius: 2rem !important; /* Unified radius */
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.card-nexus:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+body.dark-mode .glass {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Modal Modernization */
+/* Modal Modernization with Glassmorphism */
+.modal-content {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #1f2937 !important;
+  border-radius: 3rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  overflow: hidden !important; /* Evita que el fondo del footer se salga de las esquinas redondeadas */
+}
+
+body.dark-mode .modal-content {
+  background: rgba(30, 41, 59, 0.95) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* DARK MODE OVERRIDES - HIGH SPECIFICITY */
+
+/* Backgrounds */
+body.dark-mode.bg-white,
+body.dark-mode.bg-gray-50,
+body.dark-mode.bg-gray-100,
+/* Fix for body class itself */
+body.dark-mode.bg-gray-200,
+body.dark-mode .bg-white,
+body.dark-mode .bg-gray-50,
+body.dark-mode .bg-gray-100,
+body.dark-mode .bg-gray-200 {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Force Light Mode bg overrides to avoid white flashes */
+body:not(.dark-mode) .bg-white,
+body:not(.dark-mode) .bg-gray-50 {
+  background-color: var(--bg-secondary) !important;
+}
+
+body:not(.dark-mode) .bg-gray-100 {
+  background-color: var(--bg-primary) !important;
+}
+
+body.dark-mode.bg-gray-100,
+body.dark-mode .bg-gray-100,
+body.dark-mode.bg-gray-200,
+body.dark-mode .bg-gray-200 {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Text Colors */
+body.dark-mode .text-gray-900,
+body.dark-mode .text-gray-800,
+body.dark-mode .text-gray-700,
+body.dark-mode .text-black {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .text-gray-600,
+body.dark-mode .text-gray-500,
+body.dark-mode .text-gray-400 {
+  color: var(--text-secondary) !important;
+}
+
+/* Borders */
+body.dark-mode .border,
+body.dark-mode .border-t,
+body.dark-mode .border-b,
+body.dark-mode .border-l,
+body.dark-mode .border-r,
+body.dark-mode .border-gray-200,
+body.dark-mode .border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+/* Inputs & Selects */
+body.dark-mode input.input-text,
+body.dark-mode select.input-text,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode input[type="text"],
+body.dark-mode input[type="number"],
+body.dark-mode input[type="password"],
+body.dark-mode input[type="date"] {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+  color-scheme: dark;
+}
+
+body.dark-mode input.clean-date {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+body.dark-mode input::placeholder {
+  color: #64748b !important;
+}
+
+/* Table Enhancements */
+body.dark-mode table thead th {
+  background-color: #0f172a !important;
+  /* Darker header */
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+body.dark-mode tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+body.dark-mode tbody tr {
+  background-color: var(--bg-secondary) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+/* Specific Fix for Header Text showing white on white */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3 {
+  color: var(--text-primary) !important;
+}
+
+/* Buttons */
+body.dark-mode button.bg-gray-200 {
+  background-color: #334155 !important;
+  /* Slate 700 */
+  color: #f1f5f9 !important;
+}
+
+body.dark-mode button.bg-gray-200:hover {
+  background-color: #475569 !important;
+  /* Slate 600 */
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background-color: #475569;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+body.dark-mode .text-red-600,
+body.dark-mode .text-red-700 {
+  color: #f87171 !important;
+  /* Lighter red (red-400) for better visibility on dark bg */
+}
+
+body.dark-mode .text-green-600,
+body.dark-mode .text-green-700 {
+  color: #4ade80 !important;
+  /* Lighter green (green-400) */
+}
+
+body.dark-mode .text-blue-600,
+body.dark-mode .text-blue-700 {
+  color: #60a5fa !important;
+  /* Lighter blue (blue-400) */
+}
+
+/* Dark Mode Overrides for Status Boxes */
+body.dark-mode .bg-green-50 { background-color: rgba(22, 101, 52, 0.2) !important; border-color: #166534 !important; }
+body.dark-mode .bg-red-50 { background-color: rgba(153, 27, 27, 0.2) !important; border-color: #991b1b !important; }
+body.dark-mode .bg-blue-50 { background-color: rgba(30, 64, 175, 0.2) !important; border-color: #1e40af !important; }
+body.dark-mode .bg-yellow-50 { background-color: rgba(133, 77, 14, 0.2) !important; border-color: #854d0e !important; }
+
+body.dark-mode .bg-green-50 span, 
+body.dark-mode .bg-green-50 p { color: #4ade80 !important; }
+body.dark-mode .bg-red-50 span, 
+body.dark-mode .bg-red-50 p { color: #f87171 !important; }
+body.dark-mode .bg-blue-50 span, 
+body.dark-mode .bg-blue-50 p { color: #60a5fa !important; }
+body.dark-mode .bg-yellow-50 span, 
+body.dark-mode .bg-yellow-50 p { color: #fbbf24 !important; }
+
+/* Placeholder and Input text forced visibility */
+body.dark-mode input::placeholder {
+  color: #94a3b8 !important; /* Slate 400 for better visibility than default 500/600 */
+}
+
+/* Dark Mode Toggle Button */
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 9999px;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+
+body.dark-mode .theme-toggle {
+  color: #94a3b8;
+}
+
+body.dark-mode .theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+/* Popover Menu Fixes */
+.action-popover {
+  z-index: 50;
+  /* Ensure it stays above other elements */
+}
+
+body.dark-mode .action-popover {
+  background-color: #1e293b !important;
+  /* Slate 800 */
+  border-color: #334155 !important;
+}
+
+body.dark-mode .action-popover button {
+  color: #f1f5f9 !important;
+}
+
+body.dark-mode .action-popover button:hover {
+  background-color: #334155 !important;
+  /* Slate 700 */
+  color: #fff !important;
+}
+
+/* =========================================
+   ANIMACIONES DE LA BARRA LATERAL (Sidebar)
+   ========================================= */
+
+/* 1. Transición suave del ancho de la barra */
+#sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. Estilos base del texto para que pueda animarse */
+.sidebar-text {
+  /* Animamos opacidad, ancho máximo y margen para que desaparezca suavemente */
+  transition: opacity 0.2s ease-in-out, max-width 0.3s ease-in-out, margin 0.3s ease-in-out;
+  opacity: 1;
+  max-width: 200px;
+  /* Suficiente para el texto largo */
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  /* Necesario para que respete width/max-width */
+  vertical-align: middle;
+}
+
+/* 3. Estilos cuando está COLAPSADA (.sidebar-collapsed en el wrapper) */
+#sidebar-wrapper.sidebar-collapsed .sidebar-text {
+  opacity: 0;
+  max-width: 0;
+  margin: 0;
+  pointer-events: none;
+  /* Evita clicks fantasmas */
+}
+
+/* 4. Ajustes para los íconos y layout cuando está colapsada */
+#sidebar-wrapper.sidebar-collapsed .sidebar-link {
+  justify-content: center;
+  /* Centrar íconos */
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#sidebar-wrapper.sidebar-collapsed .sidebar-link svg {
+  margin-right: 0;
+  /* Quitar margen derecho del ícono */
+}
+
+/* 5. Ocultar título y logo grande al colapsar */
+#sidebar-wrapper.sidebar-collapsed .brand-name,
+#sidebar-wrapper.sidebar-collapsed .brand-logo-container div {
+  display: none;
+  /* El contenedor de texto del header */
+}
+
+#sidebar-wrapper.sidebar-collapsed .brand-logo-container {
+  justify-content: center;
+  width: 100%;
+}
+
+/* =========================================
+   NEXUS ANIMATIONS & PREMIUM STYLES
+   ========================================= */
+
+@keyframes nexusFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nexusSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nexusScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: nexusFadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: nexusSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: nexusScaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Delay Helpers */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+.delay-400 {
+  animation-delay: 0.4s;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+.premium-card {
+  border-radius: 1.5rem !important;
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.2);
+  border-color: var(--accent-color);
+}
+
+body.dark-mode .premium-card {
+  border-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-secondary) !important;
+}
+
+body.dark-mode .premium-card:hover {
+  box-shadow: 0 12px 25px -10px rgba(0, 0, 0, 0.5);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Stagger animation for children */
+.stagger-container>* {
+  opacity: 0;
+}
+
+/* =========================================
+   INDICADORES TECH STYLES
+   ========================================= */
+
+.dashboard-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.card-tech {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 1.5rem;
+  isolation: isolate;
+  backface-visibility: hidden;
+  text-rendering: optimizeLegibility;
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-font-smoothing: antialiased;
+  transform: translate3d(0, 0, 0);
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-tech:hover {
+  transform: translate3d(0, -12px, 0);
+  box-shadow: 
+    0 40px 70px -15px rgba(0, 0, 0, 0.2),
+    0 0 25px -5px rgba(37, 99, 235, 0.4); 
+  border-color: rgba(37, 99, 235, 0.6) !important;
+}
+
+body.dark-mode .card-tech {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .card-tech:hover {
+  border-color: var(--accent-color) !important;
+  box-shadow: 
+    0 40px 80px -20px rgba(0, 0, 0, 0.5),
+    0 0 30px -5px var(--accent-color);
+}
+
+.tech-gradient-1 {
+  background: var(--grad-primary);
+  color: white;
+}
+
+.tech-gradient-profit {
+  background: var(--grad-success);
+  color: white;
+}
+
+.tech-gradient-debt {
+  background: var(--grad-danger);
+  color: white;
+}
+
+.tech-gradient-cash {
+  background: var(--grad-info);
+  color: white;
+}
+
+.tech-gradient-premium {
+  background: var(--grad-premium);
+  color: white;
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+}
+
+body.dark-mode .text-glow {
+  text-shadow: 0 0 15px currentColor;
+}
+
+.mesh-bg {
+  position: absolute;
+  top: -25%;
+  right: -20%;
+  width: 250px;
+  height: 250px;
+  filter: blur(70px);
+  opacity: 0.15;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 100%;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.dark-mode .mesh-bg {
+  opacity: 0.45;
+}
+
+/* Ocultar ícono nativo del navegador para que sea más limpio */
+.clean-date::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.card-tech:hover .mesh-bg {
+  opacity: 0.5;
+  transform: scale(1.4) translate3d(0, 0, 0);
+}
+
+.data-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.indicator-val {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.aurora-mesh {
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, rgba(139, 92, 246, 0.05) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(236, 72, 153, 0.05) 0, transparent 50%);
+  background-attachment: fixed !important;
+  background-size: cover !important;
+}
+
+body.dark-mode .aurora-mesh {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.2) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, rgba(139, 92, 246, 0.15) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.2) 0, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(236, 72, 153, 0.1) 0, transparent 50%);
+}
+
+/* WhatsApp Drawer Styles (Opera Style) */
+#whatsapp-drawer {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 30px -5px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode #whatsapp-drawer {
+  background-color: #1e293b;
+  border-left-color: #334155;
+  box-shadow: -15px 0 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode #whatsapp-drawer .bg-\[\#f0f2f5\] {
+  background-color: #0f172a !important;
+}
+
+body.dark-mode #whatsapp-drawer .bg-white {
+  background-color: #1e293b !important;
+}
+
+#whatsapp-drawer.translate-x-full {
+  transform: translateX(100%);
+}
+
+#whatsapp-drawer:not(.translate-x-full) {
+  transform: translateX(0);
+}
+
+#whatsapp-loading.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --- ICONOS DE SIDEBAR PERSONALIZADOS --- */
+.sidebar-icon {
+  transition: color 0.3s ease;
+}
+.icon-blue { color: #3b82f6; }
+.icon-orange { color: #f97316; }
+.icon-yellow { color: #eab308; }
+.icon-purple { color: #a855f7; }
+.icon-cyan { color: #06b6d4; }
+.icon-green { color: #22c55e; }
+.icon-pink { color: #ec4899; }
+.icon-indigo { color: #6366f1; }
+.icon-teal { color: #14b8a6; }
+.icon-red { color: #ef4444; }
+.icon-slate { color: #94a3b8; }
+.icon-amber { color: #f59e0b; }
+.icon-rose { color: #f43f5e; }
+.icon-sky { color: #0ea5e9; }
+
+/* Inversión al activar el enlace */
+.bg-blue-600 .sidebar-icon,
+.bg-blue-600:hover .sidebar-icon {
+  color: #ffffff !important;
+}
+
+/* Fix para hovers de botones Tailwind en Dark Mode */
+body.dark-mode .hover\:bg-blue-100:hover,
+body.dark-mode .focus\:bg-blue-100:focus,
+body.dark-mode .hover\:bg-indigo-50:hover,
+body.dark-mode .focus\:bg-indigo-50:focus,
+body.dark-mode .hover\:bg-blue-50:hover,
+body.dark-mode .focus\:bg-blue-50:focus {
+  background-color: #1e293b !important;
+}
+
+/* Fix para botones de herramientas (Barcode, etc.) en Dark Mode */
+body.dark-mode .bg-purple-100 {
+  background-color: rgba(147, 51, 234, 0.2) !important;
+  color: #c084fc !important;
+}
+body.dark-mode .hover\:bg-purple-200:hover {
+  background-color: rgba(147, 51, 234, 0.4) !important;
+}
+body.dark-mode .bg-blue-100 {
+  background-color: rgba(37, 99, 235, 0.2) !important;
+  color: #60a5fa !important;
+}
+body.dark-mode .hover\:bg-blue-200:hover {
+  background-color: rgba(37, 99, 235, 0.4) !important;
+}
+body.dark-mode .bg-gray-100 {
+  background-color: rgba(75, 85, 99, 0.3) !important;
+  color: #d1d5db !important;
+}
+body.dark-mode .hover\:bg-gray-200:hover {
+  background-color: rgba(75, 85, 99, 0.5) !important;
+}

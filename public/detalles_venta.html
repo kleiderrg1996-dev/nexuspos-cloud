@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalles de Venta | NexusPOS</title>
+  <link href="/css/output.css" rel="stylesheet">
+  <link href="/css/theme.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark-mode');
+    }
+  </script>
+  <div class="flex-1 flex flex-col h-screen">
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8">
+
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+        <h1 class="text-3xl font-bold text-gray-800">
+          Detalles de Venta <span id="sale-id-title" class="text-blue-600"></span>
+        </h1>
+
+        <div class="flex items-center gap-3">
+          <!-- Nuevo botón para imprimir recibo -->
+          <button id="btn-print-receipt" type="button"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Imprimir recibo
+          </button>
+
+          <button id="btn-whatsapp-sale" type="button"
+            class="inline-flex items-center px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md shadow hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 gap-2 border border-green-600">
+            <i class="fab fa-whatsapp text-base"></i>
+            WhatsApp
+          </button>
+
+          <a href="cobranza.html" target="content-frame"
+            class="text-sm text-blue-600 hover:underline whitespace-nowrap">
+            &larr; Volver a Cobranzas
+          </a>
+        </div>
+      </div>
+
+      <div id="loading-message" class="text-center text-gray-500 py-10">
+        Cargando detalles...
+      </div>
+
+      <div id="error-message" class="hidden text-center text-red-500 py-10"></div>
+
+      <div id="sale-details-container" class="hidden">
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Columna izquierda: productos + pagos -->
+          <div class="lg:col-span-2 space-y-6">
+
+            <!-- Productos -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <h2 class="text-xl font-semibold text-gray-800 mb-4">Productos Vendidos</h2>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                      <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Cant.</th>
+                      <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Precio Unit. (Bs)
+                      </th>
+                      <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total (Bs)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="products-table-body" class="bg-white divide-y divide-gray-200">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Historial de pagos/abonos -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <h2 class="text-xl font-semibold text-gray-800 mb-4">Historial de Pagos y Abonos</h2>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Método</th>
+                      <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Referencia</th>
+                      <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Monto (Bs)</th>
+                      <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Monto ($)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payments-table-body" class="bg-white divide-y divide-gray-200">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Columna derecha: resumen + cliente -->
+          <div class="lg:col-span-1 space-y-6">
+
+            <!-- Resumen -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <h2 class="text-xl font-semibold text-gray-800 mb-4">Resumen de la Venta</h2>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Subtotal (Bs):</span>
+                  <span id="summary-subtotal" class="font-semibold text-gray-900"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">IVA (Bs):</span>
+                  <span id="summary-iva" class="font-semibold text-gray-900"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Venta Original (Bs):</span>
+                  <span id="summary-total-ves" class="font-semibold text-gray-900 text-right flex flex-col items-end"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Venta Original ($):</span>
+                  <span id="summary-total-usd" class="font-semibold text-gray-900"></span>
+                </div>
+                <hr>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Total Pagado (Bs):</span>
+                  <span id="summary-total-pagado" class="font-semibold text-green-600"></span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Deuda Actualizada (Bs):</span>
+                  <span id="summary-total-pendiente-ves" class="font-bold text-2xl text-red-600"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Total Pendiente ($):</span>
+                  <span id="summary-total-pendiente-usd" class="font-bold text-lg text-red-600"></span>
+                </div>
+                <!-- Explicación de Tasa y Conversión (Solo visible si hay saldo pendiente) -->
+                <div id="rate-explanation-box" class="hidden mt-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg text-xs space-y-1.5">
+                  <div class="flex items-center gap-1.5 text-red-800 dark:text-red-300 font-semibold mb-1">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Cálculo de Deuda al Día</span>
+                  </div>
+                  <p class="text-gray-600 dark:text-gray-400">
+                    La deuda original se resguarda en dólares. El total pendiente en Bolívares se calcula multiplicando el saldo en dólares (<strong id="exp-pendiente-usd" class="text-red-700 dark:text-red-400"></strong>) por la tasa <span id="exp-tasa-nombre" class="font-semibold text-gray-800 dark:text-gray-200"></span> actual de <strong id="exp-tasa-valor" class="text-red-700 dark:text-red-400"></strong>:
+                  </p>
+                  <div class="flex justify-between items-center pt-1.5 border-t border-red-200/50 dark:border-red-900/30 text-sm font-semibold text-red-900 dark:text-red-200">
+                    <span>Fórmula:</span>
+                    <span id="exp-formula" class="font-mono bg-red-100 dark:bg-red-950/60 px-2 py-0.5 rounded text-xs"></span>
+                  </div>
+                </div>
+                <hr>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Estado:</span>
+                  <span id="summary-estado" class="font-semibold text-gray-900"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Fecha:</span>
+                  <span id="summary-fecha" class="font-semibold text-gray-900"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cliente -->
+            <div id="client-info-card" class="bg-white p-6 rounded-lg shadow-md hidden">
+              <h2 class="text-xl font-semibold text-gray-800 mb-4">Cliente</h2>
+              <div class="space-y-2">
+                <div>
+                  <span class="text-sm font-medium text-gray-500">Nombre:</span>
+                  <span id="client-nombre" class="block text-gray-900 font-semibold"></span>
+                </div>
+                <div>
+                  <span class="text-sm font-medium text-gray-500">Cédula:</span>
+                  <span id="client-cedula" class="block text-gray-900"></span>
+                </div>
+                <div>
+                  <span class="text-sm font-medium text-gray-500">Teléfono:</span>
+                  <span id="client-telefono" class="block text-gray-900"></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/detalles_venta.js"></script>
+</body>
+
+</html>

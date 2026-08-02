@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasas de Cambio y Precios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'nexus-blue': '#2563eb',
+            'nexus-green': '#22c55e',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .input-text {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background-color: #f9fafb;
+      transition: all 0.2s;
+    }
+    .dark .input-text {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: white;
+    }
+    .input-text:focus {
+      outline: none;
+      ring: 2px;
+      ring-color: #22c55e;
+      border-color: #22c55e;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen p-6">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Tasas de Cambio y Precios</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configura las tasas de cambio, IVA y métodos de cálculo</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-3 mb-5 relative z-10">
+        <div class="p-2 bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+            </path>
+          </svg>
+        </div>
+        <h2 class="text-lg font-bold text-gray-800 dark:text-white">Tasas de Cambio y Precios</h2>
+      </div>
+
+      <form id="updateRatesForm" class="relative z-10 space-y-6">
+        <!-- Grid Principal: Tasas e Impuestos -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <!-- Tasa BCV -->
+          <div>
+            <label for="rate-bcv"
+              class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Tasa BCV
+              (Oficial)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-gray-400">Bs</span>
+              <input type="number" step="0.01" id="rate-bcv" placeholder="0.00"
+                class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+            </div>
+            <div class="flex items-center mt-2">
+              <input id="auto-bcv" name="AUTO_BCV" type="checkbox"
+                class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+              <label for="auto-bcv" class="ml-2 text-xs text-gray-600 dark:text-gray-300">Auto-actualizar
+                (3pm)</label>
+            </div>
+          </div>
+
+          <!-- Tasa Paralelo -->
+          <div>
+            <label for="rate-paralelo"
+              class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Tasa
+              Paralelo</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-gray-400">Bs</span>
+              <input type="number" step="0.01" id="rate-paralelo" placeholder="0.00"
+                class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+            </div>
+          </div>
+
+          <!-- Tasa COP -->
+          <div>
+            <label for="rate-cop"
+              class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Tasa COP
+              (Pesos)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-gray-400">$</span>
+              <input type="number" step="1" id="rate-cop" placeholder="0"
+                class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+            </div>
+          </div>
+
+          <!-- IVA Percentage -->
+          <div>
+            <label for="rate-iva"
+              class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">IVA
+              (%)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-gray-400">%</span>
+              <input type="number" step="0.01" id="rate-iva" placeholder="16.00"
+                class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider & Settings Grid -->
+        <div class="border-t border-gray-100 dark:border-gray-700 pt-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Metodo Cobro IVA -->
+            <div>
+              <span class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-3">Método de
+                Cobro IVA</span>
+              <div class="flex flex-col gap-3">
+                <label
+                  class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all">
+                  <input id="iva-mode-included" name="iva-mode" type="radio" value="INCLUDED"
+                    class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                  <div>
+                    <span class="block text-sm font-bold text-gray-800 dark:text-white">Incluido</span>
+                    <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Precio TOTAL ya incluye
+                      el impuesto.</span>
+                  </div>
+                </label>
+                <label
+                  class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all">
+                  <input id="iva-mode-excluded" name="iva-mode" type="radio" value="EXCLUDED"
+                    class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                  <div>
+                    <span class="block text-sm font-bold text-gray-800 dark:text-white">Sumar al Precio</span>
+                    <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Total = Precio Base +
+                      IVA.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Metodo Calculo -->
+            <div>
+              <span class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-3">Método de
+                Cálculo</span>
+              <div class="flex flex-col gap-3">
+                <label
+                  class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all">
+                  <input id="calc-method-simple" name="calc-method" type="radio" value="1"
+                    class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                  <div>
+                    <span class="block text-sm font-bold text-gray-800 dark:text-white">Simple (Recargo)</span>
+                    <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Precio = Costo +
+                      Ganancia</span>
+                  </div>
+                </label>
+                <label
+                  class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all">
+                  <input id="calc-method-fiscal" name="calc-method" type="radio" value="2"
+                    class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                  <div>
+                    <span class="block text-sm font-bold text-gray-800 dark:text-white">Fiscal (Margen)</span>
+                    <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Precio = Costo / (1 -
+                      %)</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4">
+          <button type="submit"
+            class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+            Guardar Cambios
+          </button>
+          <p id="updateStatus" class="text-sm mt-2 text-center h-5 font-medium"></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Helper para mostrar mensajes
+    function mostrarMensaje(elemento, mensaje, tipo) {
+      if (!elemento) return;
+      elemento.textContent = mensaje;
+      elemento.className = 'text-sm mt-2 text-center h-5 font-medium';
+      if (tipo === 'success') {
+        elemento.classList.add('text-green-600');
+      } else if (tipo === 'error') {
+        elemento.classList.add('text-red-600');
+      } else {
+        elemento.classList.add('text-gray-600');
+      }
+    }
+
+    // Referencias DOM
+    const updateRatesForm = document.getElementById('updateRatesForm');
+    const rateBcvInput = document.getElementById('rate-bcv');
+    const rateParaleloInput = document.getElementById('rate-paralelo');
+    const rateCopInput = document.getElementById('rate-cop');
+    const updateStatus = document.getElementById('updateStatus');
+
+    // Cargar tasas actuales
+    async function loadCurrentRates() {
+      try {
+        const response = await fetch('/api/settings/rates');
+        if (!response.ok) throw new Error('No se pudieron cargar las tasas');
+        const rates = await response.json();
+        rateBcvInput.value = rates.BCV;
+        rateParaleloInput.value = rates.PARALELO;
+        rateCopInput.value = rates.COP;
+        const rateIvaInput = document.getElementById('rate-iva');
+        if (rateIvaInput) {
+          rateIvaInput.value = rates.IVA_PERCENTAGE !== undefined ? rates.IVA_PERCENTAGE : 16.00;
+        }
+
+        if (rates.IVA_MODE === 'EXCLUDED') {
+          document.getElementById('iva-mode-excluded').checked = true;
+        } else {
+          document.getElementById('iva-mode-included').checked = true;
+        }
+
+        const autoBcvCheckbox = document.getElementById('auto-bcv');
+        if (autoBcvCheckbox) {
+          autoBcvCheckbox.checked = (rates.AUTO_BCV === 1 || rates.AUTO_BCV === '1' || rates.AUTO_BCV === true);
+        }
+
+        if (rates.CALC_METHOD && rates.CALC_METHOD === 2) {
+          document.getElementById('calc-method-fiscal').checked = true;
+        } else {
+          document.getElementById('calc-method-simple').checked = true;
+        }
+      } catch (error) {
+        console.error('Error cargando tasas:', error);
+        mostrarMensaje(updateStatus, 'Error al cargar tasas.', 'error');
+      }
+    }
+
+    // Guardar tasas
+    async function handleUpdateRates(event) {
+      event.preventDefault();
+      mostrarMensaje(updateStatus, '', 'info');
+
+      const calcMethod = document.querySelector('input[name="calc-method"]:checked').value;
+      const ivaModeEl = document.querySelector('input[name="iva-mode"]:checked');
+      const ivaMode = ivaModeEl ? ivaModeEl.value : 'INCLUDED';
+      const autoBcvCheckbox = document.getElementById('auto-bcv');
+      const rateIvaInput = document.getElementById('rate-iva');
+
+      const newRates = {
+        BCV: rateBcvInput.value,
+        PARALELO: rateParaleloInput.value,
+        COP: rateCopInput.value,
+        CALC_METHOD: calcMethod,
+        AUTO_BCV: autoBcvCheckbox ? autoBcvCheckbox.checked : false,
+        IVA_PERCENTAGE: rateIvaInput ? rateIvaInput.value : 16.0,
+        IVA_MODE: ivaMode
+      };
+
+      try {
+        const response = await fetch('/api/settings/rates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newRates)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || result.message || 'Error al actualizar');
+        }
+
+        mostrarMensaje(
+          updateStatus,
+          result.message || '¡Configuración actualizada con éxito!',
+          'success'
+        );
+
+        if (result.newBcvRate) {
+          rateBcvInput.value = result.newBcvRate;
+        }
+      } catch (error) {
+        console.error('Error actualizando tasas:', error);
+        mostrarMensaje(
+          updateStatus,
+          error.message || 'Error al actualizar la configuración.',
+          'error'
+        );
+      }
+    }
+
+    // Event Listeners
+    updateRatesForm.addEventListener('submit', handleUpdateRates);
+
+    const autoBcvCheck = document.getElementById('auto-bcv');
+    if (autoBcvCheck) {
+      autoBcvCheck.addEventListener('change', () => {
+        mostrarMensaje(updateStatus, 'Actualizando y consultando tasa BCV...', 'info');
+        const fakeEvent = { preventDefault: () => { } };
+        handleUpdateRates(fakeEvent);
+      });
+    }
+
+    // Cargar al iniciar
+    loadCurrentRates();
+  </script>
+</body>
+</html>

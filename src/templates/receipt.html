@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recibo #{{saleId}}</title>
+  <style>
+    /* ================= PANTALLA (PREVIEW) ================= */
+    body {
+      background-color: #f3f4f6;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      background: white;
+      padding: 10px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-print { background-color: #2563eb; color: white; }
+    .btn-close { background-color: #ef4444; color: white; }
+    .btn-whatsapp { background-color: #25D366; color: white; }
+
+    .preview-container {
+      margin-top: 20px;
+      margin-bottom: 40px;
+      background: white;
+      padding: 0; 
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    /* ================= RECIBO (VISUAL & PRINT) ================= */
+    .receipt-body {
+      font-family: {{fontFamily}}, 'Courier New', Courier, monospace; 
+      font-size: {{fontSize}};
+      color: #000;
+      width: {{widthCss}}; 
+      padding: 5px;
+      background-color: #fff;
+      box-sizing: border-box;
+    }
+
+    .container { width: 100%; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .bold { font-weight: bold; }
+    .small { font-size: 0.9em; }
+    
+    .logo {
+      max-width: {{logoSize}}%;
+      max-height: 80px;
+      width: auto;
+      height: auto;
+      display: {{logoDisplay}};
+      margin: 0 auto 5px auto;
+    }
+    
+    .header { margin-bottom: 10px; text-align: {{headerAlign}}; }
+    .footer { margin-top: 10px; text-align: {{footerAlign}}; }
+    
+    .divider {
+      border-top: 1px dashed #000;
+      margin: 5px 0;
+    }
+
+    .client-info-container { display: {{clientDisplay}}; }
+    .tasa-container { display: {{tasaDisplay}}; }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    td, th {
+      vertical-align: top;
+      padding: 2px 0;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+    .qty { width: 15%; }
+    .item { width: 55%; }
+    .price { width: 30%; }
+    
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    /* ================= MEDIA PRINT ================= */
+    @media print {
+      body { background: none; display: block; margin: 0; padding: 0; }
+      .toolbar, .btn { display: none !important; }
+      .preview-container { box-shadow: none; margin: 0; border-radius: 0; }
+      .receipt-body { width: 100%; padding: 0; margin: 0; }
+      @page { size: auto; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <button class="btn btn-print" onclick="window.print()">Imprimir</button>
+    <button class="btn btn-whatsapp" id="btn-wa-pdf" onclick="sendToWhatsApp()">WhatsApp PDF</button>
+    <button class="btn btn-close" onclick="window.close()">Cerrar</button>
+  </div>
+
+  <div class="preview-container">
+    <div class="receipt-body">
+      <div class="container">
+        <div class="header">
+          {{logoHtml}}
+          <div class="bold" style="font-size: 1.2em;">{{businessName}}</div>
+          <div class="header-text">{{headerText}}</div>
+          <div class="small">Documento no fiscal</div>
+        </div>
+
+        <div class="divider"></div>
+        
+        <div class="row">
+          <span>Fecha: {{dateStr}}</span>
+          <span>{{timeStr}}</span>
+        </div>
+        <div class="row">
+          <span class="bold">Venta #{{saleId}}</span>
+        </div>
+        
+        <div class="client-info-container">{{clientInfo}}</div>
+
+        <div class="divider"></div>
+
+        <table>
+          <thead>
+            <tr class="small" style="text-align:left;">
+              <th class="qty">Can</th>
+              <th class="item">Producto</th>
+              <th class="price text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{productsHtml}}
+          </tbody>
+        </table>
+
+        <div class="divider"></div>
+
+        <div class="row bold" style="font-size: 1.1em;">
+          <span>TOTAL Bs:</span>
+          <span>{{totalVes}}</span>
+        </div>
+        <div class="row">
+          <span>TOTAL $ (Ref):</span>
+          <span>{{totalUsd}}</span>
+        </div>
+        <div class="tasa-container">
+          <div class="small text-right">Tasa: {{bcvRate}}</div>
+        </div>
+
+        <div class="divider"></div>
+        
+        <div class="bold">Pagos:</div>
+        {{paymentsHtml}}
+
+        {{extraInfoHtml}}
+
+        <div class="divider"></div>
+
+        <div class="footer small">
+          {{footerText}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      if (window.innerWidth > 400) window.resizeTo(420, 850);
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('pdfMode') === '1') setTimeout(() => { window.print(); }, 600);
+    };
+
+    function sendToWhatsApp() {
+      const params = new URLSearchParams(window.location.search);
+      const phone = (params.get('phone') || '').replace(/\D/g, '');
+      const saleId = params.get('saleId') || document.title.replace(/\D/g, '');
+      window.print();
+      setTimeout(() => {
+        const text = encodeURIComponent('¡Hola! Te comparto tu factura *#' + saleId + '* de NexusPOS.\n\nGuarda el PDF desde el diálogo de impresión que se acaba de abrir y adjúntalo aquí.');
+        const url = phone ? 'https://web.whatsapp.com/send?phone=' + phone + '&text=' + text : 'https://web.whatsapp.com/send?text=' + text;
+        window.open(url, '_blank');
+      }, 1200);
+    }
+  </script>
+</body>
+</html>

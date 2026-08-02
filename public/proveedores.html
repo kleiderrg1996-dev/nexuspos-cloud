@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proveedores | NexusPOS</title>
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    <div class="flex-1 flex flex-col h-screen">
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-7xl mx-auto">
+
+                <!-- HEADER -->
+                <header class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+                            Gestión de Proveedores
+                        </h1>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            Administra la información de contacto y fiscal de tus proveedores.
+                        </p>
+                    </div>
+                    <button id="btn-add-supplier"
+                        class="flex items-center justify-center bg-blue-600 text-white py-2.5 px-5 rounded-lg font-semibold hover:bg-blue-700 shadow-md transition-transform transform hover:-translate-y-0.5">
+                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Nuevo Proveedor
+                    </button>
+                </header>
+
+                <!-- SEARCH / ACTION BAR -->
+                <div class="card-nexus p-6 shadow-xl mb-8 sticky top-0 z-[5]">
+                    <div class="relative">
+                        <input type="text" id="supplier-search-input"
+                            class="input-text block w-full pl-4 pr-4 py-4 text-sm"
+                            placeholder="Buscar proveedor por nombre, RIF o contacto...">
+                    </div>
+                </div>
+
+                <!-- SUPPLIER LIST -->
+                <div id="supplier-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- JS will render cards here -->
+                </div>
+
+                <div id="supplier-list-placeholder" class="text-center py-12 hidden">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        aria-hidden="true">
+                        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No se encontraron proveedores
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Prueba con otro término de búsqueda o añade
+                        uno nuevo.</p>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- PANEL DETALLE PROVEEDOR (DRAWER/OVERLAY) -->
+        <div id="supplier-detail-panel" class="fixed inset-0 bg-black bg-opacity-40 z-[500] flex justify-end hidden">
+            <div id="supplier-detail-content"
+                class="bg-white dark:bg-gray-800 w-full max-w-2xl h-full shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out">
+                <!-- Header Panel -->
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div id="supplier-initials"
+                            class="h-12 w-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl uppercase">
+                            --
+                        </div>
+                        <div>
+                            <h2 id="detail-supplier-name"
+                                class="text-2xl font-bold text-gray-900 dark:text-white leading-tight">Nombre Proveedor
+                            </h2>
+                            <p id="detail-supplier-id-info" class="text-sm text-gray-500 dark:text-gray-400">RIF J-00000000</p>
+                        </div>
+                    </div>
+                    <button id="btn-close-detail"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transform transition-transform hover:rotate-90">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 px-6">
+                    <nav class="flex space-x-8" aria-label="Tabs">
+                        <button data-tab="info"
+                            class="tab-btn border-blue-500 text-blue-600 dark:text-blue-400 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                            Información
+                        </button>
+                        <button data-tab="purchases"
+                            class="tab-btn border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                            Compras
+                        </button>
+                        <button data-tab="statement"
+                            class="tab-btn border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                            Estado de Cuenta
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Panel Body -->
+                <div class="flex-1 overflow-y-auto p-6" id="panel-body">
+                    <!-- Información (Visible por defecto) -->
+                    <div id="tab-info" class="tab-pane space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">RIF</label>
+                                <p id="info-rif" class="text-gray-900 dark:text-gray-100 font-medium font-mono">---
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Teléfono</label>
+                                <p id="info-telefono" class="text-gray-900 dark:text-gray-100 font-medium font-mono">---
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Contacto</label>
+                                <p id="info-contacto" class="text-gray-900 dark:text-gray-100 font-medium">---
+                                </p>
+                            </div>
+                            <div class="md:col-span-2 space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Dirección</label>
+                                <p id="info-direccion" class="text-gray-900 dark:text-gray-100 font-medium">---</p>
+                            </div>
+                        </div>
+                        <div class="pt-6 border-t border-gray-100 dark:border-gray-700 flex gap-3">
+                            <button id="btn-edit-supplier-detail"
+                                class="bg-blue-600 text-white py-2.5 px-5 rounded-lg font-bold hover:bg-blue-700 shadow-md transition-all flex items-center gap-2 transform hover:-translate-y-0.5 active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                    </path>
+                                </svg>
+                                Editar Datos
+                            </button>
+                            <button id="btn-delete-supplier-detail"
+                                class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 py-2.5 px-5 rounded-lg font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-all flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                                Inactivar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Compras (Historial de Compras) -->
+                    <div id="tab-purchases" class="tab-pane hidden space-y-4">
+                        <div id="purchases-loading" class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <p class="text-sm text-gray-500 mt-2 font-medium">Cargando compras...</p>
+                        </div>
+                        <div id="purchases-container" class="space-y-3">
+                            <!-- List of purchases will be here -->
+                        </div>
+                    </div>
+
+                    <!-- Estado de Cuenta (Movimientos) -->
+                    <div id="tab-statement" class="tab-pane hidden space-y-4">
+                        <div id="statement-loading" class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <p class="text-sm text-gray-500 mt-2 font-medium">Generando estado de cuenta...</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-800">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Fecha
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">Ref
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase">Monto
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-400 uppercase">Tipo
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statement-body"
+                                    class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                                    <!-- Movements here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL PROVEEDOR (PARA CREAR/EDITAR) -->
+    <div id="supplier-modal" class="fixed inset-0 bg-white/5 dark:bg-black/5 backdrop-blur-[2px] flex items-center justify-center z-[1000] hidden">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-lg mx-4">
+            <h2 id="supplier-modal-title" class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Añadir Nuevo
+                Proveedor</h2>
+            <form id="form-supplier" class="space-y-5">
+                <input type="hidden" id="supplier-id">
+                <div>
+                    <label for="supplier-nombre"
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Nombre / Razón Social *</label>
+                    <input type="text" id="supplier-nombre" required class="block w-full input-text"
+                        placeholder="Ej. Distribuidora Polar">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="supplier-rif"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">RIF</label>
+                        <input type="text" id="supplier-rif" class="block w-full input-text" placeholder="J-12345678-9">
+                    </div>
+                    <div>
+                        <label for="supplier-telefono"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+                        <input type="tel" id="supplier-telefono" class="block w-full input-text"
+                            placeholder="0414-0000000">
+                    </div>
+                </div>
+                <div>
+                    <label for="supplier-contacto"
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Persona de Contacto</label>
+                    <input type="text" id="supplier-contacto" class="block w-full input-text"
+                        placeholder="Ej. Juan Pérez">
+                </div>
+                <div>
+                    <label for="supplier-direccion"
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
+                    <textarea id="supplier-direccion" rows="3" class="block w-full input-text"
+                        placeholder="Dirección corta..."></textarea>
+                </div>
+                <p id="supplier-modal-status" class="text-sm mt-3 text-center h-5"></p>
+                <div class="mt-8 flex justify-end space-x-3">
+                    <button type="button" id="btn-cancel-supplier"
+                        class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 px-6 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="bg-blue-600 text-white py-3 px-8 rounded-lg font-bold hover:bg-blue-700 shadow-md transform active:scale-95 transition-all">
+                        Guardar Proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/proveedores.js"></script>
+</body>
+
+</html>

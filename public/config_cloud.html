@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respaldo Cloud - NexusPOS</title>
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <link href="/css/toast.css" rel="stylesheet">
+    <script src="/js/toast.js"></script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark-mode .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(55, 65, 81, 0.5);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 p-6 transition-colors duration-200">
+    <script>if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');</script>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-4 mb-8">
+            <a href="/public/dashboard.html" class="text-gray-500 hover:text-blue-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+                    NexusPOS Cloud Backup
+                </h1>
+                <p class="text-gray-500 mt-1">Gestión de copias de seguridad remotas y suscripción.</p>
+            </div>
+        </div>
+
+        <!-- LOGIN SECTION -->
+        <div id="login-section" class="glass-panel rounded-xl shadow-lg p-8 max-w-md mx-auto hidden">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold dark:text-white">Iniciar Sesión Cloud</h2>
+                <p class="text-sm text-gray-500">Ingresa tus credenciales de suscripción.</p>
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Usuario</label>
+                    <input type="text" name="username" required
+                        class="w-full p-2.5 rounded border dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Contraseña</label>
+                    <input type="password" name="password" required
+                        class="w-full p-2.5 rounded border dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <button type="submit"
+                    class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold shadow-lg transition transform active:scale-95">
+                    Conectar
+                </button>
+            </form>
+        </div>
+
+        <!-- STATUS SECTION -->
+        <div id="status-section" class="glass-panel rounded-xl shadow-lg p-8 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h2 class="text-2xl font-bold dark:text-white mb-2">Estado del Servicio</h2>
+                    <div class="flex items-center gap-3 mb-6">
+                        <span id="status-indicator" class="w-4 h-4 rounded-full bg-gray-400"></span>
+                        <span id="status-text"
+                            class="text-lg font-medium text-gray-700 dark:text-gray-300">Verificando...</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div
+                            class="bg-blue-50 dark:bg-gray-700/50 p-4 rounded-lg border border-blue-100 dark:border-gray-600">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Usuario Conectado</p>
+                            <p class="text-lg font-bold text-blue-800 dark:text-blue-300" id="display-username">--</p>
+                        </div>
+
+                        <div
+                            class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Tiempo Restante</p>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-3xl font-bold text-green-700 dark:text-green-400"
+                                    id="days-remaining">--</span>
+                                <span class="text-gray-600 dark:text-gray-400">días de suscripción</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                            <p class="text-sm text-gray-500">Vencimiento</p>
+                            <p class="font-mono text-gray-700 dark:text-gray-300" id="expiration-date">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
+                    <div
+                        class="w-24 h-24 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 dark:text-white">Respaldo Manual</h3>
+                    <p class="text-center text-sm text-gray-500 mb-4">
+                        Crea una copia de seguridad de tu base de datos ahora mismo.
+                    </p>
+
+                    <button id="btn-manual-backup" onclick="performManualBackup()"
+                        class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded font-bold shadow-lg transform active:scale-95 transition w-full">
+                        <span id="backup-btn-text">Iniciar Respaldo</span>
+                    </button>
+
+                    <!-- Progress Indicator -->
+                    <div id="backup-progress" class="hidden mt-4">
+                        <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
+                            <div id="backup-progress-bar"
+                                class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%">
+                            </div>
+                        </div>
+                        <p id="backup-progress-text" class="text-xs text-gray-500 text-center">Iniciando...</p>
+                    </div>
+
+                    <button onclick="logout()" class="mt-8 text-red-500 hover:text-red-700 text-sm underline">
+                        Cerrar Sesión / Cambiar Cuenta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BACKUPS LIST SECTION -->
+        <div id="backups-section" class="glass-panel rounded-xl shadow-lg p-8 mt-6 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-bold dark:text-white">Tus Respaldos</h2>
+                    <p class="text-sm text-gray-500">Lista de copias de seguridad disponibles en la nube</p>
+                </div>
+                <button onclick="loadBackupsList()"
+                    class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    🔄 Actualizar
+                </button>
+            </div>
+
+            <div id="backups-list" class="space-y-3">
+                <p class="text-gray-400 text-center py-4">Cargando respaldos...</p>
+            </div>
+
+            <!-- Instrucciones de Restauración -->
+            <div
+                class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <h3 class="font-bold text-yellow-800 dark:text-yellow-300 mb-2">📋 Cómo Restaurar un Respaldo</h3>
+                <ol class="text-sm text-yellow-700 dark:text-yellow-400 space-y-1 list-decimal list-inside">
+                    <li>Descarga el archivo de respaldo deseado</li>
+                    <li>Cierra completamente NexusPOS</li>
+                    <li>Renombra el archivo descargado a <code
+                            class="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">mi-tienda.db</code></li>
+                    <li>Reemplaza el archivo en la carpeta de datos de NexusPOS</li>
+                    <li>Inicia NexusPOS nuevamente</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DEL SERVIDOR REMOTO
+        // Para desarrollo local, cambiar a: 'http://localhost:4000/api'
+        const API_URL = 'https://nexuspos.com.ve/respaldo/api';
+
+        const loginSection = document.getElementById('login-section');
+        const statusSection = document.getElementById('status-section');
+
+        // Elementos de UI
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const displayUser = document.getElementById('display-username');
+        const daysRemainingEl = document.getElementById('days-remaining');
+        const expDateEl = document.getElementById('expiration-date');
+
+        async function init() {
+            const token = localStorage.getItem('cloud_token');
+            const username = localStorage.getItem('cloud_user');
+
+            if (!token) {
+                showLogin();
+            } else {
+                showStatus();
+                if (username) displayUser.textContent = username;
+
+                // Sincronizar token en background
+                syncTokenWithServer(token);
+
+                await checkStatus(token);
+            }
+        }
+
+        function syncTokenWithServer(token) {
+            // Enviamos el token al proceso local para respaldos automáticos
+            fetch('/api/backup/cloud/save-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            }).catch(e => console.warn('Background sync error:', e));
+        }
+
+        function showLogin() {
+            loginSection.classList.remove('hidden');
+            statusSection.classList.add('hidden');
+        }
+
+        function showStatus() {
+            loginSection.classList.add('hidden');
+            statusSection.classList.remove('hidden');
+            document.getElementById('backups-section').classList.remove('hidden');
+            loadBackupsList();
+        }
+
+        async function checkStatus(token) {
+            try {
+                statusIndicator.className = "w-4 h-4 rounded-full bg-yellow-400 animate-pulse";
+                statusText.textContent = "Conectando con servidor...";
+
+                const res = await fetch(`${API_URL}/backup/status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    Toast.error("Sesión expirada o inválida");
+                    logout();
+                    return;
+                }
+
+                if (!res.ok) throw new Error('Error de conexión');
+
+                const data = await res.json();
+
+                if (data.active) {
+                    statusIndicator.className = "w-4 h-4 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]";
+                    statusText.textContent = "Servicio Activo";
+                    statusText.className = "text-lg font-bold text-green-600 dark:text-green-400";
+                } else {
+                    statusIndicator.className = "w-4 h-4 rounded-full bg-red-500";
+                    statusText.textContent = "Servicio Inactivo / Expirado";
+                    statusText.className = "text-lg font-bold text-red-600";
+                    Toast.warning("Tu suscripción ha vencido");
+                }
+
+                daysRemainingEl.textContent = data.days_remaining;
+                expDateEl.textContent = new Date(data.expiration_date).toLocaleDateString() + ' ' + new Date(data.expiration_date).toLocaleTimeString();
+
+            } catch (err) {
+                console.error(err);
+                statusIndicator.className = "w-4 h-4 rounded-full bg-red-500";
+                statusText.textContent = "Error de Conexión";
+                Toast.error("No se pudo conectar con el servidor de respaldo");
+            }
+        }
+
+        async function loadBackupsList() {
+            const token = localStorage.getItem('cloud_token');
+            const listContainer = document.getElementById('backups-list');
+
+            if (!token) {
+                listContainer.innerHTML = '<p class="text-gray-400 text-center py-4">Inicia sesión para ver tus respaldos</p>';
+                return;
+            }
+
+            listContainer.innerHTML = '<p class="text-gray-400 text-center py-4">Cargando...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/backup/list`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) throw new Error('Error al cargar respaldos');
+
+                const data = await res.json();
+
+                if (!data.backups || data.backups.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                            </div>
+                            <p class="text-gray-500">No tienes respaldos todavía</p>
+                            <p class="text-sm text-gray-400 mt-1">Realiza tu primer respaldo usando el botón de arriba</p>
+                        </div>`;
+                    return;
+                }
+
+                listContainer.innerHTML = data.backups.map((backup, idx) => `
+                    <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800 dark:text-white text-sm">${backup.filename}</p>
+                                <p class="text-xs text-gray-500">${backup.dateFormatted} • ${backup.sizeFormatted}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="downloadBackup('${backup.filename}')" 
+                                class="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Descargar
+                            </button>
+                            <button onclick="restoreBackup('${backup.filename}')" 
+                                class="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Restaurar
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error('Error cargando lista de backups:', err);
+                listContainer.innerHTML = '<p class="text-red-500 text-center py-4">Error al cargar respaldos</p>';
+            }
+        }
+
+        function downloadBackup(filename) {
+            const token = localStorage.getItem('cloud_token');
+
+            if (!token) {
+                Toast.error('Debes iniciar sesión');
+                return;
+            }
+
+            // Crear un enlace temporal con autenticación
+            const downloadUrl = `${API_URL}/backup/download/${encodeURIComponent(filename)}`;
+
+            // Usar fetch para descargar con token
+            fetch(downloadUrl, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al descargar');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    Toast.success('Descarga iniciada');
+                })
+                .catch(err => {
+                    console.error('Error descargando:', err);
+                    Toast.error('Error al descargar el respaldo');
+                });
+        }
+
+        async function restoreBackup(filename) {
+            const token = localStorage.getItem('cloud_token');
+
+            if (!token) {
+                Toast.error('Debes iniciar sesión');
+                return;
+            }
+
+            // Confirmación de seguridad
+            const confirmed = confirm(
+                `⚠️ ADVERTENCIA: Restaurar Respaldo\n\n` +
+                `Estás a punto de reemplazar TODA tu base de datos actual con:\n` +
+                `📁 ${filename}\n\n` +
+                `Esta acción:\n` +
+                `• Creará un backup de tus datos actuales\n` +
+                `• Reemplazará la base de datos\n` +
+                `• Requiere reiniciar la aplicación\n\n` +
+                `¿Deseas continuar?`
+            );
+
+            if (!confirmed) return;
+
+            // Segunda confirmación para mayor seguridad
+            const doubleConfirm = confirm(
+                `🔴 CONFIRMACIÓN FINAL\n\n` +
+                `¿Estás COMPLETAMENTE SEGURO de que deseas restaurar este respaldo?\n\n` +
+                `Esta acción NO se puede deshacer automáticamente.`
+            );
+
+            if (!doubleConfirm) return;
+
+            // Mostrar loading
+            Toast.info('Iniciando restauración...');
+
+            try {
+                const res = await fetch('/api/backup/cloud/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, filename })
+                });
+
+                const result = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(result.error || 'Error al restaurar');
+                }
+
+                // Mostrar mensaje de éxito
+                Toast.success('¡Restauración completada!');
+
+                setTimeout(async () => {
+                    alert(
+                        `✅ BASE DE DATOS RESTAURADA\n\n` +
+                        `${result.message}\n\n` +
+                        `Se creó un respaldo de seguridad de tus datos anteriores.\n\n` +
+                        `La aplicación se reiniciará ahora.`
+                    );
+
+                    // Reiniciar la aplicación usando Electron IPC
+                    if (window.api && window.api.invoke) {
+                        try {
+                            await window.api.invoke('app:restart');
+                        } catch (e) {
+                            console.warn('No se pudo reiniciar via IPC, recargando página...');
+                            window.location.reload();
+                        }
+                    } else {
+                        // Fallback para modo web
+                        window.location.reload();
+                    }
+                }, 500);
+
+            } catch (err) {
+                console.error('Error en restauración:', err);
+                Toast.error(err.message || 'Error al restaurar el respaldo');
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                // UI Loading State
+                btn.disabled = true;
+                btn.innerText = 'Conectando...';
+
+                console.log('Iniciando login con:', data.username);
+
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (!res.ok) throw new Error(result.error || 'Error de autenticación');
+
+                console.log('Login exitoso:', result);
+
+                // 1. Guardar en localStorage (CRÍTICO)
+                localStorage.setItem('cloud_token', result.token);
+                localStorage.setItem('cloud_user', result.username);
+
+                // 2. Feedback visual inmediato
+                btn.className = "w-full py-2.5 bg-green-600 text-white rounded font-bold shadow-lg";
+                btn.innerText = "¡Conectado!";
+
+                if (window.Toast) Toast.success('Login correcto, actualizando...');
+
+                // 3. ACTUALIZACIÓN MANUAL DE UI (Ya que el reload parece fallar)
+                console.log('Cambiando vista manualmente...');
+
+                // Ocultar login
+                if (loginSection) loginSection.classList.add('hidden');
+
+                // Mostrar estatus
+                if (statusSection) statusSection.classList.remove('hidden');
+
+                // Mostrar backups
+                const backupSection = document.getElementById('backups-section');
+                if (backupSection) backupSection.classList.remove('hidden');
+
+                // Cargar datos
+                console.log('Cargando datos iniciales...');
+                // Llamamos a init() para que configure todo como si acabara de cargar
+                init();
+
+                // 4. Fallback de recarga (solo por si acaso, después de 2s)
+                setTimeout(() => {
+                    console.log('Intentando recarga de seguridad...');
+                    window.location.reload();
+                }, 2000);
+
+            } catch (err) {
+                console.error('Login error:', err);
+                if (window.Toast) Toast.error(err.message);
+                else alert(err.message);
+
+                // Restaurar botón solo si falló
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        });
+
+        function completeLogin(username, token) {
+            // Actualizar textos
+            if (displayUser) displayUser.textContent = username;
+
+            // Cambiar vistas
+            loginSection.classList.add('hidden');
+            statusSection.classList.remove('hidden');
+            document.getElementById('backups-section').classList.remove('hidden');
+
+            // Cargar datos
+            loadBackupsList();
+            checkStatus(token);
+        }
+
+
+        async function performManualBackup() {
+            const token = localStorage.getItem('cloud_token');
+
+            if (!token) {
+                Toast.error('Debes iniciar sesión primero');
+                return;
+            }
+
+            const btn = document.getElementById('btn-manual-backup');
+            const btnText = document.getElementById('backup-btn-text');
+            const progressDiv = document.getElementById('backup-progress');
+            const progressBar = document.getElementById('backup-progress-bar');
+            const progressText = document.getElementById('backup-progress-text');
+
+            try {
+                // Deshabilitar botón y mostrar progreso
+                btn.disabled = true;
+                btnText.textContent = 'Procesando...';
+                progressDiv.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Preparando respaldo...';
+
+                // Animación de progreso inicial
+                progressBar.style.width = '20%';
+
+                const res = await fetch('/api/backup/cloud', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+
+                const result = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(result.error || 'Error al realizar respaldo');
+                }
+
+                // Completar barra de progreso
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Respaldo completado';
+
+                setTimeout(() => {
+                    progressDiv.classList.add('hidden');
+                    Toast.success(result.message || 'Respaldo guardado exitosamente');
+                }, 1500);
+
+            } catch (err) {
+                console.error('Error en respaldo:', err);
+                progressDiv.classList.add('hidden');
+                Toast.error(err.message || 'Error al realizar respaldo');
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btnText.textContent = 'Iniciar Respaldo';
+                }, 2000);
+            }
+        }
+
+        function logout() {
+            // Eliminar del servidor
+            fetch('/api/backup/cloud/remove-token', { method: 'DELETE' })
+                .then(() => console.log('✅ Token eliminado del servidor'))
+                .catch(err => console.warn('⚠️ Error al eliminar token del servidor:', err));
+
+            // Eliminar del navegador
+            localStorage.removeItem('cloud_token');
+            localStorage.removeItem('cloud_user');
+
+            // Limpiar UI
+            statusIndicator.className = "w-4 h-4 rounded-full bg-gray-400";
+            statusText.textContent = "Desconectado";
+            daysRemainingEl.textContent = "--";
+            document.getElementById('backups-section').classList.add('hidden');
+            showLogin();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

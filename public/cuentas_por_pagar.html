@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuentas por Pagar | NexusPOS</title>
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <link href="/css/toast.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .aurora-mesh {
+            background-color: #f8fafc;
+            background-image: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+                radial-gradient(at 50% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0px, transparent 50%);
+        }
+        .dark-mode .aurora-mesh {
+            background-color: #0f172a;
+            background-image: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 50% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.1) 0px, transparent 50%);
+        }
+        .card-debt {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 2rem;
+            padding: 1.75rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark-mode .card-debt {
+            background: rgba(30, 41, 59, 0.75);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        .card-debt:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(245, 158, 11, 0.4) !important;
+        }
+        .dark-mode .card-debt:hover {
+            border-color: #f97316 !important;
+            box-shadow: 0 0 30px -10px rgba(249, 115, 22, 0.5);
+        }
+        .filters-container {
+            border-radius: 2.5rem !important;
+        }
+        .search-input-rounded {
+            border-radius: 1.5rem !important;
+        }
+        .filter-type-btn {
+            border-radius: 1.25rem !important;
+            transition: all 0.3s ease;
+        }
+        .table-container-rounded {
+            border-radius: 2rem !important;
+        }
+        /* Definitive Padding Fix for Rounded Corners */
+        .table-container-rounded th:first-child,
+        .table-container-rounded td:first-child {
+            padding-left: 4rem !important;
+        }
+        .table-container-rounded th:last-child,
+        .table-container-rounded td:last-child {
+            padding-right: 4rem !important;
+        }
+        .search-input-rounded {
+            border-radius: 1.5rem !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            background-color: rgba(0, 0, 0, 0.02) !important;
+        }
+        .dark-mode .search-input-rounded {
+            background-color: rgba(0, 0, 0, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+        .search-input-rounded:focus {
+            background-color: white !important;
+            border-color: #f97316 !important;
+        }
+        .dark-mode .search-input-rounded:focus {
+            background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+        .debt-row:hover {
+            background: rgba(245, 158, 11, 0.04);
+        }
+        
+        /* Modal Buttons Premium Styling */
+        .btn-nexus-cancel {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid transparent !important;
+        }
+        .dark-mode .btn-nexus-cancel {
+            background-color: #1e293b !important;
+            color: #94a3b8 !important;
+        }
+        .btn-nexus-cancel:hover {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            color: #ef4444 !important;
+            border-color: rgba(239, 68, 68, 0.2) !important;
+        }
+        
+        .btn-nexus-confirm {
+            background-color: #ea580c !important;
+            color: white !important;
+            box-shadow: 0 10px 20px -5px rgba(234, 88, 12, 0.3) !important;
+        }
+        .btn-nexus-confirm:hover {
+            background-color: #f97316 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(234, 88, 12, 0.4) !important;
+        }
+        .btn-nexus-confirm:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 aurora-mesh min-h-screen">
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+
+    <div class="flex-1 flex flex-col p-4 md:p-8">
+        <div class="max-w-7xl mx-auto w-full space-y-8">
+            
+            <!-- HEADER -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic leading-none">
+                        Cuentas por <span class="text-orange-500 underline decoration-orange-500/30 underline-offset-8">Pagar</span>
+                    </h1>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-[0.3em] mt-3 opacity-70">Proveedores y Gastos Pendientes</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="btn-refresh" class="px-5 py-3 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-2 border border-gray-200 dark:border-white/5">
+                        <i class="fa-solid fa-rotate text-orange-500"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI SUMMARY -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="card-debt relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl"></div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Deuda Total (VES)</p>
+                    <h2 id="total-debt-ves" class="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">0.00 Bs</h2>
+                    <p id="total-debt-usd" class="text-sm font-bold text-orange-500 mt-2">0.00 $</p>
+                </div>
+                <div class="card-debt relative overflow-hidden group">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">En Compras</p>
+                    <h2 id="debt-purchases-ves" class="text-2xl font-black text-gray-900 dark:text-white tracking-tighter">0.00 Bs</h2>
+                    <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase">Proveedores de Inventario</p>
+                </div>
+                <div class="card-debt relative overflow-hidden group">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">En Gastos</p>
+                    <h2 id="debt-expenses-ves" class="text-2xl font-black text-gray-900 dark:text-white tracking-tighter">0.00 Bs</h2>
+                    <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase">Egresos Operativos</p>
+                </div>
+                <div class="card-debt relative overflow-hidden group">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Acreedores</p>
+                    <h2 id="creditor-count" class="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">0</h2>
+                    <p class="text-[10px] font-bold text-blue-500 mt-2 uppercase tracking-widest">Facturas Vigentes</p>
+                </div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="bg-white dark:bg-slate-800 py-3 px-8 filters-container shadow-sm border border-gray-200 dark:border-white/5 flex flex-wrap items-center gap-6">
+                <div class="flex-1 min-w-[300px]">
+                    <div class="relative group">
+                        <input type="text" id="debt-search" placeholder="Buscar por proveedor o número de factura..." class="w-full px-8 py-4 bg-gray-50 dark:bg-slate-900 border-0 search-input-rounded outline-none focus:ring-4 ring-orange-500/5 text-sm font-bold dark:text-white transition-all">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button class="filter-type-btn active px-5 py-3 rounded-2xl bg-orange-500 text-white font-black text-[10px] uppercase tracking-widest" data-type="ALL">Todos</button>
+                    <button class="filter-type-btn px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-500 font-black text-[10px] uppercase tracking-widest" data-type="COMPRA">Compras</button>
+                    <button class="filter-type-btn px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-500 font-black text-[10px] uppercase tracking-widest" data-type="GASTO">Gastos</button>
+                </div>
+            </div>
+
+            <!-- TABLA DE DEUDAS -->
+            <div class="bg-white dark:bg-slate-800 table-container-rounded shadow-2xl overflow-hidden border border-gray-100 dark:border-white/5">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50/50 dark:bg-black/20 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100 dark:border-white/5">
+                                <th class="pl-14 pr-8 py-6">Tipo</th>
+                                <th class="px-8 py-6">Emisión</th>
+                                <th class="px-8 py-6">Proveedor / Concepto</th>
+                                <th class="px-8 py-6">Referencia</th>
+                                <th class="px-8 py-6">Monto Original</th>
+                                <th class="px-8 py-6">Saldo Pendiente</th>
+                                <th class="pl-8 pr-14 py-6 text-right">Liquidar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="debt-table-body" class="divide-y divide-gray-50 dark:divide-white/5 font-bold text-slate-700 dark:text-slate-300">
+                            <!-- Inyectado vía JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-results" class="hidden flex flex-col items-center justify-center py-24 text-gray-300 dark:text-gray-600">
+                    <i class="fa-solid fa-hand-holding-dollar text-7xl mb-6 opacity-30"></i>
+                    <p class="font-black uppercase tracking-[0.3em]">Sin cuentas pendientes</p>
+                    <p class="text-[10px] mt-2 opacity-50">¡Excelente trabajo financiero!</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL ABONO (VIDRIO NARANJA) -->
+    <div id="modal-abono" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-lg">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[40px] shadow-2xl overflow-hidden p-8 animate-slide-up border border-white/10">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center text-xl shadow-inner font-black italic">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Registrar Pago</h3>
+                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Abono a Cuenta por Pagar</p>
+                </div>
+            </div>
+            
+            <div id="abono-header" class="mb-6 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5">
+                <p id="abono-entity" class="text-sm font-black text-slate-800 dark:text-slate-100 uppercase truncate"></p>
+                <div class="flex justify-between mt-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Referencia:</span>
+                    <span id="abono-ref" class="text-[10px] font-black text-slate-600 dark:text-slate-400"></span>
+                </div>
+                <div class="flex justify-between mt-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Pendiente:</span>
+                    <span id="abono-max" class="text-[10px] font-black text-orange-500"></span>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label id="label-monto-abono" class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-2 block text-center">Importe a Pagar (VES)</label>
+                    <input type="number" step="0.01" id="abono-monto" class="w-full px-6 py-4 bg-gray-50 dark:bg-slate-900 border-0 rounded-[24px] outline-none focus:ring-4 ring-orange-500/10 text-center text-3xl font-black text-orange-600 dark:text-orange-400" autofocus placeholder="0.00">
+                </div>
+
+                <!-- Método de Pago -->
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-2 block">Método de Pago</label>
+                    <select id="abono-metodo" class="w-full px-6 py-4 bg-gray-50 dark:bg-slate-900 border-0 rounded-[20px] outline-none focus:ring-4 ring-orange-500/10 text-sm font-bold text-slate-700 dark:text-slate-200 appearance-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                        <option value="DOLARES">Dólares (Efectivo)</option>
+                        <option value="EFECTIVO_VES">Bolívares (Efectivo)</option>
+                        <option value="PAGO_MOVIL">Pago Móvil</option>
+                        <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                        <option value="PUNTO_DE_VENTA">Punto de Venta</option>
+                        <option value="BIOPAGO">Biopago</option>
+                    </select>
+                </div>
+
+                <!-- Tasa del día (solo para pagos en BS) -->
+                <div id="wrapper-tasa" class="hidden animate-fade-in">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-2 block">Tasa del Día (BCV)</label>
+                    <input type="number" step="0.01" id="abono-tasa" class="w-full px-6 py-4 bg-gray-50 dark:bg-slate-900 border-1 border-orange-500/20 rounded-[20px] outline-none focus:ring-4 ring-orange-500/10 text-sm font-bold text-slate-700 dark:text-slate-100 placeholder:text-gray-400" placeholder="Ej: 800.00">
+                </div>
+
+                <!-- Referencia (Condicional) -->
+                <div id="wrapper-referencia" class="hidden animate-fade-in">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 mb-2 block">Código de Referencia / Operación</label>
+                    <input type="text" id="abono-referencia" class="w-full px-6 py-4 bg-gray-50 dark:bg-slate-900 border-1 border-orange-500/20 rounded-[20px] outline-none focus:ring-4 ring-orange-500/10 text-sm font-bold text-slate-700 dark:text-slate-100 placeholder:text-gray-400" placeholder="Escriba el número de referencia...">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <button id="cancel-abono" class="btn-nexus-cancel py-4 rounded-2xl font-black tracking-widest text-[10px] uppercase transition-all">
+                        CANCELAR
+                    </button>
+                    <button id="confirm-abono" class="btn-nexus-confirm py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all">
+                        ABONAR PAGO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/date-utils.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/cuentas_por_pagar.js?v=2.0"></script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultor de Precios | NexusPOS</title>
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 overflow-hidden">
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+
+    <div class="flex flex-col h-screen p-4 md:p-8">
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-black text-gray-800 dark:text-white uppercase tracking-tighter">
+                    Consultor de Precios
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1 font-medium">
+                    Escanea un producto para ver su información en tiempo real.
+                </p>
+            </div>
+            <div id="rate-display"
+                class="bg-white dark:bg-gray-800 px-6 py-3 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tasa BCV hoy</p>
+                <p id="current-bcv-rate" class="text-2xl font-black text-blue-600 dark:text-blue-400">0.00 Bs</p>
+            </div>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center pt-6 gap-6 overflow-y-auto">
+
+            <!-- BARRA DE BÚSQUEDA VISIBLE (arriba, sin cubrir nada) -->
+            <div class="w-full max-w-2xl relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </span>
+                <input type="text" id="barcode-input" class="input-text w-full pl-12 pr-4 py-4 text-lg font-medium"
+                    placeholder="Escanea o escribe un código de barras..." autofocus>
+            </div>
+
+            <!-- ESTADO: LISTO PARA ESCANEAR (círculo arriba) -->
+            <div id="welcome-view" class="text-center animate-pulse">
+                <div
+                    class="w-36 h-36 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-dashed border-gray-300 dark:border-gray-700 relative overflow-hidden">
+                    <div id="reader" class="absolute inset-0 w-full h-full object-cover hidden"></div>
+                    <svg id="scan-icon" class="w-16 h-16 text-gray-400 dark:text-gray-600" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-400 dark:text-gray-600 mb-2">LISTO PARA ESCANEAR</h2>
+                <p class="text-gray-500 dark:text-gray-500 mb-4 text-sm">Pasa el lector de código de barras por el
+                    producto</p>
+
+                <button id="toggle-camera"
+                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition-all transform hover:scale-105 flex items-center mx-auto">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Usar Cámara
+                </button>
+            </div>
+
+            <!-- ═══ CARD DEL PRODUCTO (Resultado del Escaneo) ═══ -->
+            <div id="product-card"
+                class="hidden w-full max-w-3xl transition-all duration-300 transform scale-95 opacity-0">
+
+                <div class="card-nexus overflow-hidden shadow-2xl">
+                    <!-- Banda de acento superior -->
+                    <div class="h-1 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500"></div>
+
+                    <div class="p-6 md:p-8">
+
+                        <!-- Línea 1: Categoría (izq) + Stock pill (der) -->
+                        <div class="flex items-center justify-between mb-3">
+                            <span id="product-category"
+                                class="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-blue-500 dark:text-blue-400">
+                                <span class="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400"></span>
+                                Categoría
+                            </span>
+                            <!-- Stock: pill compacto con colores semi-transparentes (funciona en dark/light) -->
+                            <div id="stock-badge"
+                                class="flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/40 bg-green-500/10 text-green-500">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                <span id="product-stock" class="text-sm font-black">0 Unid</span>
+                                <span id="stock-label" class="text-xs font-bold uppercase">Disponible</span>
+                            </div>
+                        </div>
+
+                        <!-- Imagen del producto -->
+                        <div id="product-image-container" class="mb-4 flex justify-center hidden">
+                            <img id="product-image" src="" alt="Imagen del Producto" class="max-h-48 rounded-xl shadow-md object-contain border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2">
+                        </div>
+
+                        <!-- Nombre + código -->
+                        <h2 id="product-name"
+                            class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white leading-tight mb-1">
+                            Nombre del Producto
+                        </h2>
+                        <p id="product-barcode" class="text-xs font-mono text-gray-400 mb-6">—</p>
+
+                        <!-- ═ PRECIOS: Bloques separados ═ -->
+
+                        <!-- Bloque Bs — Principal -->
+                        <div class="rounded-2xl text-center py-4 px-4 mb-4"
+                            style="background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);">
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                                💰 Precio (Bolívares)
+                            </p>
+                            <p id="price-ves" class="font-black text-gray-900 dark:text-white"
+                                style="font-size: 4.5rem; line-height: 1;">
+                                0.00 Bs
+                            </p>
+                        </div>
+
+                        <!-- Bloque USD — Secundario -->
+                        <div class="rounded-2xl text-center py-3 px-4"
+                            style="background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.2);">
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">
+                                💵 Equivalente USD (BCV)
+                            </p>
+                            <p id="price-usd" class="font-black"
+                                style="font-size: 4.5rem; line-height: 1; color: #3b82f6;">
+                                0.00 $
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <p class="text-center text-xs text-gray-400 mt-3">
+                    La tarjeta se cierra automáticamente en 10 segundos.
+                </p>
+            </div>
+
+            <!-- ═══ Loader ═══ -->
+            <div id="loading-spinner" class="hidden flex flex-col items-center gap-3">
+                <div class="relative w-16 h-16">
+                    <div
+                        class="absolute inset-0 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin">
+                    </div>
+                </div>
+                <p class="text-sm font-bold text-blue-600 dark:text-blue-400 animate-pulse uppercase tracking-widest">
+                    Buscando producto...
+                </p>
+            </div>
+        </main>
+
+        <footer class="mt-8 text-center text-gray-400 dark:text-gray-600">
+            <p class="text-sm font-medium">NexusPOS &copy; 2024 - Sistema de Punto de Venta Inteligente</p>
+        </footer>
+    </div>
+
+    <script src="/js/html5-qrcode.min.js"></script>
+    <script src="/js/consultor.js"></script>
+</body>
+
+</html>

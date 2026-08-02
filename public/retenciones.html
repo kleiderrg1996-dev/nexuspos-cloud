@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Retenciones SENIAT</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/c101fe97b0.js" crossorigin="anonymous"></script>
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- ESTILOS NEXUS -->
+    <link rel="stylesheet" href="css/nexusAI.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; color: #111827; }
+        .nexus-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 24px; }
+        .nexus-header { border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px; color: #1f2937; font-weight: bold; font-size: 1.25rem; }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: #3b82f6; }
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #f9fafb; padding: 12px; text-align: left; font-weight: 600; color: #4b5563; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-emitido { background-color: #d1fae5; color: #065f46; }
+        .badge-anulado { background-color: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-7xl mx-auto animate__animated animate__fadeIn">
+        
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                <i class="fa-solid fa-hand-holding-dollar text-blue-600 mr-3"></i>
+                Retenciones SENIAT emitidas
+            </h1>
+        </div>
+
+        <div class="nexus-card">
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="tabIva" class="tab-btn active"><i class="fa-solid fa-receipt mr-2"></i> Retenciones de IVA</button>
+                <button id="tabIslr" class="tab-btn"><i class="fa-solid fa-file-invoice-dollar mr-2"></i> Retenciones de ISLR</button>
+            </div>
+
+            <!-- Tab Content: IVA -->
+            <div id="contentIva" class="block">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th>Fecha Compra</th>
+                                <th>Proveedor</th>
+                                <th>Factura / Control</th>
+                                <th>N° Comprobante IVA</th>
+                                <th>% Retención</th>
+                                <th class="text-right">Monto Retenido</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaRetencionesIva">
+                            <tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: ISLR -->
+            <div id="contentIslr" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th>Fecha Compra</th>
+                                <th>Proveedor</th>
+                                <th>Factura / Control</th>
+                                <th>N° Comprobante ISLR</th>
+                                <th>Concepto</th>
+                                <th>% Ret.</th>
+                                <th class="text-right">Monto Retenido</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaRetencionesIslr">
+                            <tr><td colspan="8" class="text-center py-4">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script principal -->
+    <script src="js/retenciones.js"></script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - NexusPOS</title>
+    <link rel="icon" type="image/svg+xml" href="/images/nexuspos-icon.svg">
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <link href="/css/toast.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2979ff;
+            --electric-blue: #00e5ff;
+            --dark-indigo: #0f172a;
+            --card-bg: #10152a;
+            --input-bg: #1e293b;
+        }
+
+        body {
+            background-color: #050a15;
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: white;
+            display: flex;
+            align-items: flex-start; /* Subir la tarjeta */
+            justify-content: center;
+            padding-top: 5vh; /* Aproximar al borde superior con espacio */
+            overflow: hidden; /* Evitar scroll por los blobs */
+            position: relative;
+        }
+
+        /* AURORA BACKGROUND EFFECTS */
+        .aurora-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, #101827 0%, #050a15 100%);
+        }
+
+        .aurora-blob {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            animation: blob-float 20s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        }
+
+        .blob-1 {
+            background: #2563eb; /* Royal Blue */
+            top: -10%;
+            left: -10%;
+            animation-duration: 25s;
+        }
+
+        .blob-2 {
+            background: #0ea5e9; /* Sky Blue */
+            bottom: -15%;
+            right: -10%;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            background: #4f46e5; /* Indigo */
+            top: 40%;
+            right: 15%;
+            width: 400px;
+            height: 400px;
+            opacity: 0.3;
+            animation-duration: 22s;
+            animation-delay: -10s;
+        }
+
+        .blob-4 {
+            background: #06b6d4; /* Cyan */
+            bottom: 20%;
+            left: 10%;
+            width: 350px;
+            height: 350px;
+            opacity: 0.25;
+            animation-duration: 28s;
+            animation-delay: -15s;
+        }
+
+        @keyframes blob-float {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            33% { transform: translate(100px, 50px) scale(1.1) rotate(120deg); }
+            66% { transform: translate(-50px, 120px) scale(0.9) rotate(240deg); }
+            100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+        }
+
+        .login-card {
+            position: relative;
+            z-index: 10;
+            background: rgba(16, 21, 42, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            padding: 3.5rem 2.5rem;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(41, 121, 255, 0.05);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .logo-box {
+            background: linear-gradient(135deg, #050c17 0%, #0d1b2a 100%);
+            border: 1.5px solid rgba(0, 229, 255, 0.25);
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-text {
+            font-size: 2.75rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 0.25rem;
+            color: #ffffff;
+        }
+
+        .logo-text span {
+            color: #2979ff;
+            text-shadow: 0 0 15px rgba(41, 121, 255, 0.4);
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.25em;
+            margin-bottom: 3rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ffffff; /* Blanco puro para máxima visibilidad */
+            font-size: 1.2rem;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: rgba(30, 41, 59, 0.95); /* Menos transparencia */
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1.25rem;
+            padding: 1.25rem 1.5rem 1.25rem 3.75rem;
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field::placeholder {
+            color: #cbd5e1; /* Mas claro */
+            opacity: 1;
+        }
+
+        .input-field:focus {
+            outline: none;
+            background-color: #1e293b;
+            border-color: #2979ff;
+            box-shadow: 0 0 20px rgba(41, 121, 255, 0.4);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #2979ff 0%, #1565c0 100%);
+            color: white;
+            font-weight: 800;
+            padding: 1.4rem;
+            border-radius: 1.25rem;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            box-shadow: 0 15px 30px rgba(41, 121, 255, 0.25);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            border: none;
+            cursor: pointer;
+        }
+
+
+        .login-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .support-label {
+            color: #334155;
+            font-size: 0.7rem;
+            font-weight: 800;
+            margin: 2rem 0 1.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .support-tile {
+            aspect-ratio: 1;
+            border-radius: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            transition: transform 0.2s ease;
+        }
+
+        .support-tile:hover {
+            transform: scale(1.05);
+        }
+
+        .bg-whatsapp {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .bg-email {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .bg-telegram {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        }
+
+        .footer-text {
+            color: #334155;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        #error-message {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- AURORA BACKGROUND -->
+    <div class="aurora-container">
+        <div class="aurora-blob blob-1"></div>
+        <div class="aurora-blob blob-2"></div>
+        <div class="aurora-blob blob-3"></div>
+        <div class="aurora-blob blob-4"></div>
+    </div>
+
+    <div class="login-card">
+        <div class="logo-box">
+            <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Grid lines for hologram effect -->
+                <path d="M30 20V80M50 20V80M70 20V80" stroke="#00e5ff" stroke-width="0.5" opacity="0.15" />
+                <path d="M10 40H90M10 55H90M10 70H90" stroke="#00e5ff" stroke-width="0.5" opacity="0.15" />
+                <!-- Cart outline animated -->
+                <path d="M22 30H28L40 64H72L80 38H42" stroke="#00e5ff" stroke-width="6" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <animate attributeName="stroke" values="#00e5ff;#2979ff;#00e5ff" dur="3s"
+                        repeatCount="indefinite" />
+                </path>
+                <!-- Wheels -->
+                <circle cx="43" cy="74" r="5" fill="none" stroke="#00e5ff" stroke-width="4">
+                    <animate attributeName="stroke-opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="70" cy="74" r="5" fill="none" stroke="#00e5ff" stroke-width="4">
+                    <animate attributeName="stroke-opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"
+                        begin="0.7s" />
+                </circle>
+                <!-- Scan line -->
+                <rect x="33" y="42" width="38" height="2" rx="1" fill="#00e5ff" opacity="0.5">
+                    <animate attributeName="y" values="42;55;42" dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="3s" repeatCount="indefinite" />
+                </rect>
+            </svg>
+        </div>
+
+        <h1 class="logo-text">Nexus<span>POS</span></h1>
+        <p class="subtitle">GESTIÓN INTELIGENTE</p>
+
+        <div id="error-message" class="hidden"></div>
+
+        <form id="login-form">
+            <div class="input-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="username" name="username" placeholder="Usuario" class="input-field" required>
+            </div>
+
+            <div class="input-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" id="password" name="password" placeholder="Contraseña" class="input-field"
+                    required>
+            </div>
+
+            <button type="submit" id="login-btn" class="login-btn">
+                ENTRAR <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+        </form>
+
+        <p class="support-label">SOPORTE NEXUS</p>
+
+        <div class="support-grid">
+            <button onclick="window.open('https://wa.me/584122932068', '_blank')"
+                class="support-tile bg-whatsapp border-none cursor-pointer" title="Chat por WhatsApp">
+                <i class="fa-brands fa-whatsapp"></i>
+            </button>
+            <button onclick="window.location.href='mailto:nexuspos2026@gmail.com'"
+                class="support-tile bg-email border-none cursor-pointer" title="Enviar Correo">
+                <i class="fa-solid fa-envelope"></i>
+            </button>
+            <button onclick="window.open('https://t.me/NexusPOS', '_blank')"
+                class="support-tile bg-telegram border-none cursor-pointer" title="Chat por Telegram">
+                <i class="fa-brands fa-telegram"></i>
+            </button>
+        </div>
+
+        <p class="footer-text">NEXUSPOS VERSION 1.1.0 © 2026</p>
+    </div>
+
+    <script src="/js/toast.js"></script>
+    <script src="/js/login.js"></script>
+</body>
+
+</html>

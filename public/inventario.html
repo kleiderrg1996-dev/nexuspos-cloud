@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario | NexusPOS v1.1</title>
+  <link href="/css/output.css" rel="stylesheet">
+  <link href="/css/theme.css" rel="stylesheet">
+  <link href="/css/toast.css" rel="stylesheet">
+  <script src="/js/JsBarcode.all.min.js"></script>
+  <script src="/js/html5-qrcode.min.js"></script>
+  <script src="/js/toast.js"></script>
+  <style>
+    @media print {
+      @page {
+        margin: 10mm;
+      }
+
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+      }
+
+      /* Ocultar elementos principales que no son el modal */
+      body>div.flex-1 {
+        display: none !important;
+      }
+
+      /* Mostrar el modal principal */
+      #discrepancies-modal {
+        position: static !important;
+        display: block !important;
+        visibility: visible !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: auto !important;
+      }
+
+      /* Asegurar que la tabla y sus contenedores fluyan libremente */
+      #discrepancies-modal .modal-content,
+      #discrepancies-modal .custom-scrollbar,
+      #discrepancies-modal .flex-1.overflow-y-auto {
+        position: static !important;
+        display: block !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Comportamiento de tabla para múltiples páginas */
+      table {
+        page-break-inside: auto;
+        width: 100% !important;
+        border-collapse: collapse;
+      }
+
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+
+      td,
+      th {
+        page-break-inside: avoid;
+      }
+
+      /* Ocultar botones e interactivos del modal */
+      #btn-export-pdf,
+      #btn-print-report,
+      #btn-close-discrepancies,
+      #btn-close-discrepancies-footer,
+      #btn-apply-inventory,
+      #btn-clear-counts {
+        display: none !important;
+      }
+
+      /* Fix para el Dark Mode en impresión */
+      .dark-mode,
+      .dark-mode * {
+        background-color: white !important;
+        color: black !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 aurora-mesh">
+  <script>
+    // Initialize Theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark-mode');
+    }
+  </script>
+
+  <div class="flex-1 flex flex-col h-screen">
+    <main class="flex-1 overflow-y-auto p-4 md:p-8">
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+          Inventario
+        </h1>
+        <div class="flex items-center gap-3">
+          <button id="btnThemeToggle" class="theme-toggle" title="Cambiar Tema">
+            <!-- Sun Icon (for Dark Mode) -->
+            <svg class="w-6 h-6 hidden dark:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <!-- Moon Icon (for Light Mode) -->
+            <svg class="w-6 h-6 block dark:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+
+          <button id="btnHacerInventario"
+            class="btn-pill tech-gradient-profit text-white py-2 px-4 md:px-6 hover:scale-105 active:scale-95 transition-all shadow-lg text-sm md:text-base border-0">
+            <svg class="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <span class="hidden xs:inline">Hacer Inventario</span>
+            <span class="xs:hidden">Inventario</span>
+          </button>
+
+          <button id="btnMostrarFormulario"
+            class="btn-pill tech-gradient-1 text-white py-2 px-4 md:px-6 hover:scale-105 active:scale-95 transition-all shadow-lg text-sm md:text-base border-0">
+            <svg class="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span class="hidden xs:inline">Añadir Producto</span>
+            <span class="xs:hidden">Añadir</span>
+          </button>
+
+
+        </div>
+      </div>
+
+      <div id="contenedorFormCrear"
+        class="card-nexus p-4 md:p-8 mb-8 hidden animate-slide-up">
+
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+          Añadir Nuevo Producto
+        </h2>
+
+        <form id="formCrearProducto" class="space-y-4">
+
+          <div>
+            <label for="prod-nombre" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
+            <input type="text" id="prod-nombre" required class="mt-1 block w-full input-text">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Forma de Costo</label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <button type="button" id="btn-costo-unidad"
+                class="cost-mode-toggle relative inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-l-md border border-gray-300 bg-blue-600 text-white text-sm font-medium z-10">
+                Por Unidad
+              </button>
+              <button type="button" id="btn-costo-bulto"
+                class="cost-mode-toggle relative -ml-px inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-r-md border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                Por Bulto
+              </button>
+            </div>
+            <input type="hidden" id="cost-input-mode" value="unidad">
+          </div>
+
+          <div id="costo-unitario-group">
+            <label for="prod-costo" class="block text-sm font-medium text-gray-700">Costo por Unidad</label>
+            <input type="number" step="any" id="prod-costo" required class="mt-1 block w-full input-text">
+          </div>
+
+          <div id="costo-bulto-group" class="hidden grid grid-cols-2 gap-4">
+            <div>
+              <label for="prod-costo-bulto" class="block text-sm font-medium text-gray-700">Costo del Bulto</label>
+              <input type="number" step="any" id="prod-costo-bulto" class="mt-1 block w-full input-text">
+            </div>
+            <div>
+              <label for="prod-unidades-bulto" class="block text-sm font-medium text-gray-700">Unidades por
+                Bulto</label>
+              <input type="number" step="1" id="prod-unidades-bulto" value="1" class="mt-1 block w-full input-text">
+            </div>
+          </div>
+
+          <!-- Fila: Moneda costo, % ganancia, Precio final -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="prod-moneda-costo" class="block text-sm font-medium text-gray-700">Moneda de Costo</label>
+              <select id="prod-moneda-costo" required class="mt-1 block w-full input-text">
+                <option value="PARALELO">USD (Personalizada)</option>
+                <option value="BCV">USD (BCV)</option>
+                <option value="VES">Bolívares (VES)</option>
+                <option value="COP">Pesos (COP)</option>
+              </select>
+            </div>
+            <div>
+              <label for="prod-ganancia" class="block text-sm font-medium text-gray-700 flex justify-between items-center">
+                <span>% de Ganancia</span>
+              </label>
+              <div class="mt-1 flex items-center gap-1">
+                <input type="number" step="any" id="prod-ganancia" required placeholder="Ej: 30"
+                  class="block w-full flex-grow min-w-0 input-text">
+                <button type="button" id="btn-ai-pricing-create" class="p-2 border border-blue-300 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors" title="Sugerir con NexusAI">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label for="prod-precio-final" class="block text-sm font-medium text-gray-700">Precio Final</label>
+              <div class="mt-1 flex items-center gap-1">
+                <input type="number" step="any" id="prod-precio-final" class="block w-full flex-grow min-w-0 input-text pr-1" style="min-width: 60px;"
+                  placeholder="Ej: 120.00">
+                <select id="prod-precio-moneda" class="select-currency-inline">
+                  <option value="VES">Bs</option>
+                  <option value="USD_BCV">$BCV</option>
+                  <option value="PARALELO">$Per</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="prod-stock" class="block text-sm font-medium text-gray-700">Stock Actual</label>
+              <input type="number" step="any" id="prod-stock" value="0" class="mt-1 block w-full input-text">
+            </div>
+            <div>
+              <label for="prod-stock-minimo" class="block text-sm font-medium text-gray-700">Stock Mínimo</label>
+              <input type="number" step="any" id="prod-stock-minimo" value="0" class="mt-1 block w-full input-text" placeholder="Ej: 5">
+            </div>
+            <div>
+              <label for="prod-fecha-vencimiento" class="block text-sm font-medium text-gray-700 text-red-600 font-bold">Fecha de Vencimiento</label>
+              <input type="date" id="prod-fecha-vencimiento" class="mt-1 block w-full input-text border-red-300 focus:ring-red-500 focus:border-red-500">
+            </div>
+            <div>
+              <label for="prod-tipo-venta" class="block text-sm font-medium text-gray-700">Vendido Por</label>
+              <select id="prod-tipo-venta" required class="mt-1 block w-full input-text">
+                <option value="UNIDAD" selected>Unidad</option>
+                <option value="PESO">Peso (Kg)</option>
+                <option value="LITRO">Litro (Lt)</option>
+              </select>
+            </div>
+
+          <div class="flex items-center mt-2">
+              <input id="prod-exento-iva" type="checkbox" checked
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+              <label for="prod-exento-iva" class="ml-2 block text-sm text-gray-900">
+                Exento de IVA
+              </label>
+            </div>
+          </div>
+
+          <div class="border border-gray-200 rounded-lg p-3 mt-4 mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Imagen del Producto (Opcional)</label>
+            <div class="flex flex-col md:flex-row gap-4 items-start">
+              <div class="w-full">
+                <input type="file" id="prod-imagen-file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2">
+                <div class="flex items-center gap-2">
+                  <input type="text" id="prod-imagen-url" placeholder="O pega una URL de la imagen aquí..." class="block w-full input-text text-sm">
+                  <button type="button" id="btn-google-search-create" title="Buscar imagen en Google" class="shrink-0 p-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center transition-colors shadow-sm bg-white">
+                    <svg viewBox="0 0 48 48" class="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+                  </button>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Máx. 2MB. Selecciona un archivo o pega una URL web.</p>
+              </div>
+              <div class="shrink-0 flex items-center justify-center border border-dashed border-gray-300 rounded-md bg-gray-50 overflow-hidden" style="width: 80px; height: 80px;">
+                <img id="prod-imagen-preview" src="" alt="Vista Previa" class="hidden object-cover w-full h-full">
+                <svg id="prod-imagen-icon" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="prod-barcode" class="block text-sm font-medium text-gray-700">Código de Barras
+              (Opcional)</label>
+            <div id="reader-create"
+              class="hidden w-full max-w-sm mx-auto mb-2 overflow-hidden rounded-lg border border-gray-300"></div>
+            <div class="mt-1 flex space-x-2">
+              <input type="text" id="prod-barcode" placeholder="Escanea o tipea el código..."
+                class="block w-full input-text">
+              <button type="button" id="btn-scan-camera" title="Escanear con Cámara"
+                class="p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 shadow-md transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                  </path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </button>
+              <button type="button" id="btn-generate-barcode" title="Generar Aleatorio"
+                class="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-md transition-colors">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                  stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </button>
+              <button type="button" id="btn-clear-barcode" title="Limpiar"
+                class="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 shadow-md transition-colors">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                  stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="prod-categoria-select" class="block text-sm font-medium text-gray-700">Categoría</label>
+              <div class="flex items-center space-x-2">
+                <select id="prod-categoria-select" required class="block w-full input-text">
+                  <option value="" disabled selected>-- Seleccione una --</option>
+                  <option value="_NUEVA_">** Añadir Nueva Categoría **</option>
+                </select>
+                <button type="button" id="btn-manage-categories"
+                  class="flex-shrink-0 p-2 text-gray-500 hover:text-blue-600">
+                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M10.343 3.94c.09-.542.56-1.007 1.11-.99h1.093c.55 0 1.02.448 1.11.99l.128.771c.414.249.805.545 1.156.885l.721-.302a1.125 1.125 0 0 1 1.341.316l.738.738a1.125 1.125 0 0 1-.316 1.34l-.302.721c.34.351.636.742.885 1.156l.771.128c.542.09.99.56.99 1.11v1.093c0 .55-.448 1.02-.99 1.11l-.771.128a5.093 5.093 0 0 1-1.156 1.885l.302.721a1.125 1.125 0 0 1-.316 1.34l-.738.738a1.125 1.125 0 0 1-1.34-.316l-.721-.302a5.093 5.093 0 0 1-1.156.885l-.128.771c-.09.542-.56 1.007-1.11.99h-1.093c-.55 0-1.02-.448-1.11-.99l-.128-.771a5.093 5.093 0 0 1-1.156-.885l-.721-.302a1.125 1.125 0 0 1-1.341-.316l-.738-.738a1.125 1.125 0 0 1 .316-1.34l.302-.721a5.093 5.093 0 0 1-.885-1.156l-.771-.128c-.542-.09-.99-.56-.99-1.11v-1.093c0-.55.448-1.02.99-1.11l.771-.128c.249-.414.545-.805.885-1.156l-.302-.721a1.125 1.125 0 0 1 .316-1.34l.738-.738a1.125 1.125 0 0 1 1.34.316l.721.302c.351-.34.742-.636 1.156-.885l.128-.771ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                  </svg>
+                </button>
+              </div>
+              <input type="text" id="prod-categoria-nueva" placeholder="Nombre de la nueva categoría"
+                class="mt-2 block w-full input-text hidden">
+            </div>
+            <div>
+              <label for="prod-proveedor" class="block text-sm font-medium text-gray-700">Proveedor (Opcional)</label>
+              <input type="text" id="prod-proveedor" placeholder="Ej: Coca-Cola Femsa"
+                class="mt-1 block w-full input-text">
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit"
+              class="w-full tech-gradient-1 text-white py-3 px-4 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg mt-2">
+              Guardar Producto
+            </button>
+          </div>
+        </form>
+        <p id="productStatus" class="text-sm mt-3 text-center"></p>
+      </div>
+
+      <!-- ✅ CARD PRINCIPAL: con recorte de bordes -->
+      <div class="card-nexus shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
+
+        <div class="p-4 md:p-6 border-b border-gray-200 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+          <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+
+            <h2 class="text-xl font-semibold text-gray-800 mr-2">
+              Mi Inventario
+            </h2>
+            <button id="btn-manage-bultos"
+               class="flex items-center text-sm text-white py-1 px-2 md:px-3 rounded-md font-semibold shadow-md transition-all hover:scale-105" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+               <svg class="w-4 h-4 md:mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke-width="1.5" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round"
+                   d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+               </svg>
+               <span class="hidden md:inline">Gestión de Bultos</span>
+             </button>
+             <button id="btnToggleMassMode"
+               class="flex items-center text-sm text-white py-1 px-2 md:px-3 rounded-md font-semibold shadow-md transition-all hover:scale-105" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+               <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                 </path>
+               </svg>
+               <span class="hidden sm:inline">Gestión Masiva</span>
+               <span class="sm:hidden text-xs">Masivo</span>
+             </button>
+
+            <!-- NEW MASS ACTIONS GROUP -->
+            <div id="bulkActionsHeaderGroup" class="hidden flex items-center space-x-2 overflow-x-auto">
+              <button id="btnBulkSelectAll"
+                class="flex items-center text-sm bg-blue-100 text-blue-700 py-1 px-2 md:px-3 rounded-md font-semibold hover:bg-blue-200">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="hidden md:inline">Todos</span>
+              </button>
+              <button id="btnBulkProfit"
+                class="flex items-center text-sm bg-green-100 text-green-700 py-1 px-2 md:px-3 rounded-md font-semibold hover:bg-green-200">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                  </path>
+                </svg>
+                <span class="hidden md:inline">% Ganancia</span>
+                <span class="md:hidden">%</span>
+              </button>
+              <button id="btnBulkDelete"
+                class="flex items-center text-sm bg-red-100 text-red-700 py-1 px-2 md:px-3 rounded-md font-semibold hover:bg-red-200">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                  </path>
+                </svg>
+                <span class="hidden md:inline">Eliminar</span> (<span id="selectedCountHeader">0</span>)
+              </button>
+            </div>
+            <button id="btn-toggle-sensitive"
+              class="flex items-center text-sm bg-yellow-200 text-yellow-800 py-1 px-3 rounded-md font-semibold hover:bg-yellow-300 hidden">
+              <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5.25 12 5.25c4.477 0 8.268 2.693 9.542 6.75-1.274 4.057-5.065 6.75-9.542 6.75-4.477 0-8.268-2.693-9.542-6.75z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+              </svg>
+              Ver datos sensibles
+            </button>
+          </div>
+          <div class="relative w-full lg:w-auto">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+              <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input type="text" id="searchInput" placeholder="Buscar producto..."
+              class="pl-10 pr-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm w-full lg:w-64 bg-gray-50">
+          </div>
+        </div>
+
+        <!-- ✅ IMPORTANTE: permitir overflow Y, mantener scroll X -->
+        <div class="relative overflow-x-auto overflow-y-visible">
+          <table class="min-w-full divide-y divide-gray-200 table-fixed w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Nombre
+                </th>
+                <th scope="col" id="th-costo-original"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  Costo (Original)
+                </th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  PVP (VES)
+                </th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  PVP (USD-BCV)
+                </th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  Stock (Unid/Kg)
+                </th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  Categoría
+                </th>
+                <th scope="col" id="th-proveedor"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  Proveedor
+                </th>
+                <th scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider md:hidden">
+                  Detalles
+                </th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody id="tablaInventarioBody" class="bg-white divide-y divide-gray-200">
+            </tbody>
+          </table>
+        </div>
+
+        <div id="paginationControls"
+          class="p-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-3">
+          <span id="productCountInfo" class="text-sm text-gray-600">
+            Mostrando 0 de 0 productos
+          </span>
+          <div class="flex items-center space-x-2">
+            <button id="btnAnterior"
+              class="px-5 py-2.5 bg-gray-600/20 text-gray-700 dark:text-gray-300 rounded-2xl hover:bg-gray-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center transition-all active:scale-95 border border-gray-200 dark:border-white/10">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <span id="pageInfo" class="text-sm font-black text-blue-600 dark:text-blue-400 px-6 uppercase tracking-widest">
+              Página 1 / 1
+            </span>
+            <button id="btnSiguiente"
+              class="px-5 py-2.5 bg-gray-600/20 text-gray-700 dark:text-gray-300 rounded-2xl hover:bg-gray-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center transition-all active:scale-95 border border-gray-200 dark:border-white/10">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal edición -->
+  <div id="editModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden backdrop-blur-sm p-4">
+    <div class="modal-content bg-white w-full max-w-2xl flex flex-col max-h-[90vh]">
+
+      <div class="p-6 overflow-y-auto custom-scrollbar pb-4">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">Editar Producto</h2>
+
+        <form id="formEditarProducto" class="space-y-4">
+          <input type="hidden" id="edit-prod-id">
+
+          <div>
+            <label for="edit-prod-nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+            <input type="text" id="edit-prod-nombre" required class="mt-1 block w-full input-text">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Forma de Costo</label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <button type="button" id="btn-edit-costo-unidad"
+                class="cost-mode-toggle-edit relative inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-l-md border border-gray-300 bg-blue-600 text-white text-sm font-medium z-10 transition-colors">
+                Por Unidad
+              </button>
+              <button type="button" id="btn-edit-costo-bulto"
+                class="cost-mode-toggle-edit relative -ml-px inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-r-md border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
+                Por Bulto
+              </button>
+            </div>
+            <input type="hidden" id="edit-cost-input-mode" value="unidad">
+          </div>
+
+          <div id="edit-costo-unitario-group">
+            <label for="edit-prod-costo" class="block text-sm font-medium text-gray-700">Costo por Unidad</label>
+            <input type="number" step="any" id="edit-prod-costo" required class="mt-1 block w-full input-text">
+          </div>
+
+          <div id="edit-costo-bulto-group" class="hidden grid grid-cols-2 gap-4">
+            <div>
+              <label for="edit-prod-costo-bulto" class="block text-sm font-medium text-gray-700">Costo del Bulto</label>
+              <input type="number" step="any" id="edit-prod-costo-bulto" class="mt-1 block w-full input-text">
+            </div>
+            <div>
+              <label for="edit-prod-unidades-bulto" class="block text-sm font-medium text-gray-700">Unidades por
+                Bulto</label>
+              <input type="number" step="1" id="edit-prod-unidades-bulto" value="1"
+                class="mt-1 block w-full input-text">
+            </div>
+          </div>
+
+          <!-- Fila: Moneda costo, % ganancia, Precio final -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="edit-prod-moneda-costo" class="block text-sm font-medium text-gray-700">Moneda Costo</label>
+              <select id="edit-prod-moneda-costo" required class="mt-1 block w-full input-text">
+                <option value="PARALELO">USD (Personalizada)</option>
+                <option value="BCV">USD (BCV)</option>
+                <option value="VES">Bolívares (VES)</option>
+                <option value="COP">Pesos (COP)</option>
+              </select>
+            </div>
+            <div>
+              <label for="edit-prod-ganancia" class="block text-sm font-medium text-gray-700 flex justify-between items-center">
+                <span>% Ganancia</span>
+              </label>
+              <div class="mt-1 flex items-center gap-1">
+                <input type="number" step="any" id="edit-prod-ganancia" required class="block w-full flex-grow min-w-0 input-text">
+                <button type="button" id="btn-ai-pricing-edit" class="p-2 border border-blue-300 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors" title="Sugerir con NexusAI">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label for="edit-prod-precio-final" class="block text-sm font-medium text-gray-700">Precio Final</label>
+              <div class="mt-1 flex items-center gap-1">
+                <input type="number" step="any" id="edit-prod-precio-final" class="block w-full flex-grow min-w-0 input-text" style="min-width: 60px;">
+                <select id="edit-prod-precio-moneda" class="select-currency-inline">
+                  <option value="VES">Bs</option>
+                  <option value="USD_BCV">$BCV</option>
+                  <option value="PARALELO">$Per</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="edit-prod-stock" class="block text-sm font-medium text-gray-700">Stock Actual</label>
+              <input type="number" step="any" id="edit-prod-stock" required class="mt-1 block w-full input-text">
+            </div>
+            <div>
+              <label for="edit-prod-stock-minimo" class="block text-sm font-medium text-gray-700">Stock Mínimo</label>
+              <input type="number" step="any" id="edit-prod-stock-minimo" required class="mt-1 block w-full input-text">
+            </div>
+            <div>
+              <label for="edit-prod-fecha-vencimiento" class="block text-sm font-medium text-gray-700 text-red-600 font-bold">Fecha de Vencimiento</label>
+              <input type="date" id="edit-prod-fecha-vencimiento" class="mt-1 block w-full input-text border-red-300 focus:ring-red-500 focus:border-red-500">
+            </div>
+            <div>
+              <label for="edit-prod-categoria-select" class="block text-sm font-medium text-gray-700">Categoría</label>
+              <div class="mt-1 flex">
+                <select id="edit-prod-categoria-select" required class="block w-full input-text rounded-r-none">
+                  <!-- JS llena esto -->
+                </select>
+                <!-- Input oculto para tipo venta que faltaba -->
+                <input type="hidden" id="edit-prod-tipo-venta" value="UNIDAD">
+
+                <button type="button" id="btn-manage-categories-edit"
+                  class="bg-gray-200 text-gray-600 px-3 rounded-r-md border border-l-0 border-gray-300 hover:bg-gray-300 hover:text-gray-800 transition-colors"
+                  title="Gestionar Categorías">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+              <input type="text" id="edit-prod-categoria-nueva" class="mt-1 block w-full input-text hidden"
+                placeholder="Nueva categoría...">
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            <input id="edit-prod-exento-iva" type="checkbox"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <label for="edit-prod-exento-iva" class="ml-2 block text-sm text-gray-900">
+              Exento de IVA
+            </label>
+          </div>
+
+          <input type="hidden" id="edit-prod-barcode">
+
+          <div class="border border-gray-200 rounded-lg p-3 mt-4 mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Imagen del Producto (Opcional)</label>
+            <div class="flex flex-col md:flex-row gap-4 items-start">
+              <div class="w-full">
+                <input type="file" id="edit-prod-imagen-file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2">
+                <div class="flex items-center gap-2">
+                  <input type="text" id="edit-prod-imagen-url" placeholder="O pega una URL de la imagen aquí..." class="block w-full input-text text-sm">
+                  <button type="button" id="btn-google-search-edit" title="Buscar imagen en Google" class="shrink-0 p-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center transition-colors shadow-sm bg-white">
+                    <svg viewBox="0 0 48 48" class="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.7 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+                  </button>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Máx. 2MB. Selecciona un archivo o pega una URL web.</p>
+              </div>
+              <div class="shrink-0 flex items-center justify-center border border-dashed border-gray-300 rounded-md bg-gray-50 overflow-hidden" style="width: 80px; height: 80px;">
+                <img id="edit-prod-imagen-preview" src="" alt="Vista Previa" class="hidden object-cover w-full h-full">
+                <svg id="edit-prod-imagen-icon" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="edit-prod-proveedor" class="block text-sm font-medium text-gray-700">Proveedor
+              (Opcional)</label>
+            <input type="text" id="edit-prod-proveedor" placeholder="Ej: Coca-Cola Femsa"
+              class="mt-1 block w-full input-text">
+          </div>
+
+          <p id="editProductStatus" class="text-sm mt-3 text-center"></p>
+        </form>
+      </div>
+
+      <!-- Sticky Footer -->
+      <div class="p-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
+        <button type="button" id="btnCancelarEdicion"
+          class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" form="formEditarProducto"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium shadow-sm transition-colors">
+          Guardar Cambios
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal móvil -->
+  <div id="mobile-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="modal-content p-8 shadow-2xl w-full max-w-md animate-scale-in">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Acceder desde tu Móvil</h2>
+        <button id="close-mobile-modal" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="text-gray-700 space-y-4">
+        <ol class="list-decimal list-inside space-y-2">
+          <li>Asegúrate de que tu computadora y tu móvil estén conectados a la <strong>misma red Wi-Fi</strong>.</li>
+          <li>En el navegador de tu móvil, ingresa <strong>una</strong> de las siguientes direcciones:
+            <div id="local-ip-urls" class="mt-1 text-center bg-gray-100 p-2 rounded border border-gray-300">
+              <span class="text-gray-500 text-sm">Obteniendo dirección...</span>
+            </div>
+          </li>
+          <li>O escanea este código QR con la cámara de tu celular:
+            <div
+              class="mt-2 flex justify-center items-center bg-gray-100 p-2 rounded border border-gray-300 min-h-[150px]">
+              <img id="qr-code-image" src="" alt="Código QR" class="hidden max-w-[140px] max-h-[140px]">
+              <span id="qr-code-loading" class="text-gray-500 text-sm">Generando QR...</span>
+            </div>
+          </li>
+        </ol>
+        <p class="text-xs text-gray-500">Nota: Si no funciona, revisa la conexión Wi-Fi y el firewall de tu computadora.
+        </p>
+      </div>
+      <div class="mt-6 text-right">
+        <button id="close-mobile-modal-btn"
+          class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-semibold hover:bg-gray-300">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal STOCK -->
+  <div id="stock-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="modal-content p-8 shadow-2xl w-full max-w-sm animate-scale-in">
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="stock-modal-title" class="text-xl font-semibold text-gray-800">Agregar Stock</h2>
+        <button id="btn-close-stock-modal"
+          class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+      </div>
+
+      <p id="stock-product-name" class="text-sm text-gray-600 mb-4 font-medium"></p>
+      <input type="hidden" id="stock-product-id">
+      <input type="hidden" id="stock-mode" value="add">
+
+      <form id="form-stock">
+        <div class="mb-4">
+          <label id="stock-label" for="stock-quantity" class="block text-sm font-medium text-gray-700">Cantidad a agregar</label>
+          <div id="stock-hint" class="text-xs text-gray-500 mb-2">Ingresa la cantidad a sumar al inventario.</div>
+          <input type="number" step="any" id="stock-quantity" required class="block w-full input-text"
+            placeholder="Ej: 5">
+        </div>
+
+        <p id="stock-modal-status" class="text-sm mb-3 text-center"></p>
+
+        <div class="flex justify-end gap-3">
+          <button type="button" id="btn-cancel-stock"
+            class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium">Cancelar</button>
+          <button type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal gestor de categorías -->
+  <div id="category-manager-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="modal-content p-8 shadow-2xl w-full max-w-lg animate-scale-in">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Gestionar Categorías</h2>
+        <button id="btn-close-category-modal"
+          class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+      </div>
+      <p class="text-sm text-gray-600 mb-4">Aquí puedes editar o eliminar las categorías existentes. La edición afectará
+        a todos los productos asociados.</p>
+      <div id="category-list-container" class="max-h-96 overflow-y-auto space-y-2">
+      </div>
+      <p id="category-manager-status" class="text-sm mt-3 text-center"></p>
+    </div>
+  </div>
+
+  <!-- Modal código de barras -->
+  <div id="barcode-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="modal-content p-8 shadow-2xl w-full max-w-md animate-scale-in">
+      <form id="form-barcode">
+        <div class="flex justify-between items-center mb-4">
+          <h2 id="barcode-modal-title" class="text-xl font-semibold text-gray-800">Gestionar Código de Barras</h2>
+          <button type="button" data-dismiss="modal"
+            class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+        </div>
+        <p id="barcode-product-name" class="text-sm text-gray-600 mb-4">Producto: </p>
+
+        <input type="hidden" id="barcode-product-id">
+
+        <div>
+          <label for="barcode-input" class="block text-sm font-medium text-gray-700">Código de Barras (Escanea o
+            tipea)</label>
+          <div id="reader-modal" class="hidden w-full mx-auto mb-2 overflow-hidden rounded-lg border border-gray-300">
+          </div>
+          <div class="mt-1 flex space-x-2">
+            <input type="text" id="barcode-input" class="block w-full input-text"
+              placeholder="Escanea el código de fábrica...">
+            <button type="button" id="btn-scan-camera-modal" title="Escanear con Cámara"
+              class="p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 shadow-md transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                </path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </button>
+            <button type="button" id="btn-modal-generate-barcode" title="Generar Aleatorio"
+              class="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-md transition-colors">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+            </button>
+            <button type="button" id="btn-modal-clear-barcode" title="Limpiar"
+              class="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 shadow-md transition-colors">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p id="barcode-status" class="text-sm mt-3 text-center"></p>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <button type="button" id="btn-delete-barcode"
+            class="w-full bg-red-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-red-700 disabled:opacity-50">
+            Quitar Código
+          </button>
+          <button type="submit" id="btn-save-barcode"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700">
+            Guardar Código
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <canvas id="barcode-canvas" class="hidden"></canvas>
+
+  <!-- Modal gestión de bultos -->
+  <div id="bultos-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="modal-content p-8 shadow-2xl w-full max-w-lg animate-scale-in">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Gestión de Bultos</h2>
+        <button id="btn-close-bultos-modal"
+          class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+      </div>
+
+      <p class="text-sm text-gray-600 mb-4">
+        Aquí puedes definir configuraciones rápidas para bultos (ej: "Media caja", "Caja completa").
+        Al seleccionar uno al crear/editar producto, se rellenará el costo y unidades automáticamente.
+      </p>
+
+      <!-- Lista de bultos existentes -->
+      <div id="bultos-list-container"
+        class="space-y-3 max-h-60 overflow-y-auto mb-4 bg-gray-50 p-2 rounded border border-gray-200">
+        <!-- JS rellena esto -->
+        <p class="text-center text-sm text-gray-500">Cargando...</p>
+      </div>
+
+      <!-- Formulario para agregar nuevo bulto -->
+      <form id="form-crear-bulto" class="bg-blue-50 p-3 rounded border border-blue-100">
+        <h3 class="text-sm font-semibold text-blue-800 mb-2">Nuevo Tipo de Bulto</h3>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-xs font-medium text-blue-700">Nombre</label>
+            <input type="text" id="new-bulto-nombre" placeholder="Ej: Six Pack" required
+              class="mt-1 block w-full input-text text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-blue-700">Unidades</label>
+            <input type="number" id="new-bulto-unidades" placeholder="6" required min="2"
+              class="mt-1 block w-full input-text text-sm">
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" class="bg-blue-600 text-white py-1 px-3 rounded text-sm hover:bg-blue-700">
+            Agregar
+          </button>
+        </div>
+      </form>
+
+      <p id="bultos-modal-status" class="text-sm mt-2 text-center"></p>
+    </div>
+  </div>
+
+  <!-- Modal contraseña admin -->
+  <div id="admin-password-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="modal-content p-8 shadow-2xl w-full max-w-sm animate-scale-in">
+      <form id="form-verify-password">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Verificación de Administrador</h2>
+        <p class="text-sm text-gray-600 mb-4">Se requiere contraseña de administrador para continuar.</p>
+        <div>
+          <label for="verify-password-input" class="block text-sm font-medium text-gray-700">Contraseña</label>
+          <input type="password" id="verify-password-input" class="mt-1 block w-full input-text" required>
+        </div>
+        <p id="verify-password-status" class="text-sm mt-3 text-center"></p>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button type="button" id="btn-cancel-verification"
+            class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-semibold hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700">
+            Verificar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal gestor de bultos -->
+  <div id="bulto-manager-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="modal-content p-8 shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scale-in">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Gestión de Costos por Bulto</h2>
+        <button id="btn-close-bulto-modal"
+          class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+      </div>
+
+      <p class="text-sm text-gray-600 mb-4">
+        Edita el <strong>Costo del Bulto</strong> aquí. El <strong>Costo Unitario</strong> se recalculará
+        automáticamente en todo el sistema.
+      </p>
+
+      <!-- Buscador dentro del modal de bultos -->
+      <div class="mb-4">
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input type="text" id="bulto-search-input" placeholder="Buscar por Nombre, Categoría o Proveedor..."
+            class="pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm w-full">
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proveedor</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Costo Bulto</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Unidades</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Costo Unitario (Calc.)</th>
+              <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="bulto-list-container" class="bg-white divide-y divide-gray-200">
+          </tbody>
+        </table>
+      </div>
+      <p id="bulto-manager-status" class="text-sm mt-3 text-center"></p>
+    </div>
+  </div>
+
+  <!-- Modal gestor de presentaciones -->
+  <div id="presentation-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Presentaciones del Producto</h2>
+        <button id="btn-close-presentation-modal" class="text-gray-500 hover:text-gray-800 text-2xl leading-none"
+          type="button">
+          &times;
+        </button>
+      </div>
+
+      <p id="presentation-product-name" class="text-sm text-gray-600 mb-3">
+        Producto:
+      </p>
+
+      <!-- Formulario de creación de presentación -->
+      <form id="presentation-form" class="mb-3 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+        <input type="hidden" id="presentation-id">
+
+        <div class="md:col-span-3">
+          <label for="presentation-name" class="block text-xs font-medium text-gray-700">Nombre de la
+            presentación</label>
+          <input type="text" id="presentation-name" class="mt-1 block w-full input-text"
+            placeholder="Ej: Caja x12, Paquete 500g" required>
+        </div>
+
+        <div class="md:col-span-1">
+          <label for="presentation-units" class="block text-xs font-medium text-gray-700">Unidades base</label>
+          <input type="number" step="any" id="presentation-units" class="mt-1 block w-full input-text text-right"
+            placeholder="Ej: 12" required>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="presentation-price" class="block text-xs font-medium text-gray-700">Precio</label>
+          <div class="mt-1 flex items-center gap-1">
+            <input type="number" step="any" id="presentation-price" class="block w-full flex-1 input-text text-right"
+              placeholder="Ej: 150.00" required>
+            <select id="presentation-price-currency" class="flex-shrink-0 w-24 text-xs px-1 py-1 border border-gray-300 rounded-md bg-gray-50
+                     focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+              <option value="VES">Bs</option>
+              <option value="BCV">$BCV</option>
+              <option value="PARALELO">$Personalizada</option>
+              <option value="COP">COP</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="md:col-span-4">
+          <label for="presentation-barcode" class="block text-xs font-medium text-gray-700">
+            Código de barras (opcional)
+          </label>
+          <input type="text" id="presentation-barcode" class="mt-1 block w-full input-text"
+            placeholder="Escanea o tipea el código para esta presentación...">
+        </div>
+
+        <div class="md:col-span-2 flex justify-end gap-2 mt-2">
+          <button type="submit"
+            class="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700">
+            Guardar
+          </button>
+        </div>
+      </form>
+
+      <p id="presentation-status" class="text-sm text-center mb-2"></p>
+
+      <div class="flex-1 overflow-y-auto border rounded-md">
+        <table class="min-w-full divide-y divide-gray-200 table-fixed">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase relative group">
+                <input type="checkbox" id="selectAllCheckbox"
+                  class="absolute left-1 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 hidden">
+                <span id="headerNombreText">Nombre</span>
+              </th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Unidades</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Precio Base</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Ref (Bs / $)</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código barras</th>
+              <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="presentation-list-container" class="bg-white divide-y divide-gray-200">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BULK ACTIONS BAR REMOVED -->
+  </div>
+
+  <!-- BULK PROFIT MODAL -->
+  <div id="bulkProfitModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Actualizar Ganancia Masiva</h3>
+        <div class="mt-2 text-left">
+          <p id="bulkWarningText" class="text-sm text-yellow-600 bg-yellow-50 p-2 rounded hidden mb-2"></p>
+        </div>
+        <div class="mt-2 px-7 py-3">
+          <label class="block text-sm font-medium text-gray-700 text-left mb-1">Nuevo Porcentaje (%)</label>
+          <input type="number" step="0.01" id="bulkProfitInput" class="input-text w-full mb-4" placeholder="Ej: 30">
+
+          <div class="text-left space-y-2">
+            <label class="inline-flex items-center">
+              <input type="radio" name="bulkScope" value="selected" class="form-radio" checked>
+              <span class="ml-2">Solo seleccionados</span>
+            </label>
+            <div id="bulkCategoryOptionContainer" class="hidden">
+              <label class="inline-flex items-center">
+                <input type="radio" name="bulkScope" value="category" class="form-radio">
+                <span class="ml-2">Toda la categoría: <span id="bulkCategoryName" class="font-bold"></span></span>
+              </label>
+            </div>
+            <label class="inline-flex items-center">
+              <input type="radio" name="bulkScope" value="all" class="form-radio">
+              <span class="ml-2">Todo el inventario (Activos)</span>
+            </label>
+          </div>
+        </div>
+        <div class="items-center px-4 py-3">
+          <button id="btnConfirmBulkProfit"
+            class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+            Actualizar
+          </button>
+          <button id="btnCancelBulkProfit"
+            class="mt-3 px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reporte de Discrepancias -->
+  <div id="discrepancies-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] hidden backdrop-blur-sm p-4">
+    <div
+      class="modal-content bg-white w-full max-w-3xl flex flex-col shadow-2xl rounded-2xl overflow-hidden shadow-black/20"
+      style="max-height: 85vh;">
+
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50">
+        <div>
+          <h2 class="text-2xl font-bold text-blue-900">Reporte de Discrepancias</h2>
+          <p class="text-sm text-blue-700">Comparación entre Stock de Sistema y Conteo Físico (IA)</p>
+        </div>
+        <button id="btn-close-discrepancies" class="text-blue-400 hover:text-blue-600 text-3xl">&times;</button>
+      </div>
+
+      <div class="p-0 overflow-y-auto flex-1 custom-scrollbar">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50 sticky top-0">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Producto</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Sistema
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Físico</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Diferencia
+              </th>
+            </tr>
+          </thead>
+          <tbody id="discrepancies-table-body" class="bg-white divide-y divide-gray-100">
+            <!-- JS llenará esto -->
+          </tbody>
+        </table>
+        <div id="no-discrepancies-msg" class="hidden p-10 text-center text-gray-500">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-lg font-medium">No hay discrepancias registradas.</p>
+          <p class="text-sm">Inicia un nuevo conteo con NexusAI diciéndole: "Vamos a hacer inventario".</p>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="w-full sm:w-auto flex justify-center sm:justify-start">
+          <button id="btn-clear-counts"
+            class="w-full sm:w-auto px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-md transition-colors">
+            Reiniciar Conteo
+          </button>
+        </div>
+        <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2 lg:gap-3">
+          <button id="btn-export-pdf"
+            class="w-full sm:w-auto btn-pill bg-red-600 text-white px-4 md:px-6 py-2 hover:bg-red-700 flex justify-center items-center transition-all text-sm md:text-base">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                clip-rule="evenodd" />
+            </svg>
+            Exportar PDF
+          </button>
+          <button id="btn-print-report"
+            class="w-full sm:w-auto btn-pill bg-gray-200 text-gray-700 px-4 md:px-6 py-2 hover:bg-gray-300 flex justify-center items-center transition-all text-sm md:text-base">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+              </path>
+            </svg>
+            Imprimir
+          </button>
+          <button id="btn-close-discrepancies-footer"
+            class="w-full sm:w-auto btn-pill bg-gray-600 text-white px-4 md:px-6 py-2 hover:bg-gray-700 transition-all text-sm md:text-base">
+            Cerrar
+          </button>
+          <button id="btn-apply-inventory"
+            class="w-full sm:w-auto btn-pill bg-blue-600 text-white px-6 md:px-8 py-2 hover:bg-blue-700 shadow-md transition-all active:scale-95 text-sm md:text-base">
+            Aplicar Ajustes
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- Modal Toma de Inventario (Auditoría Manual) -->
+  <div id="inventory-audit-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60 hidden backdrop-blur-sm p-4">
+    <div
+      class="modal-content bg-white w-full max-w-4xl flex flex-col shadow-2xl rounded-2xl overflow-hidden shadow-black/20"
+      style="max-height: 85vh;">
+
+      <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-emerald-50">
+        <div>
+          <h3 class="text-lg md:text-xl font-bold text-emerald-800">Toma de Inventario Físico</h3>
+          <p class="text-xs text-emerald-600">Registra las cantidades reales en estante.</p>
+        </div>
+        <button id="btn-close-audit" class="text-gray-400 hover:text-gray-600 transition-colors p-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-3 md:p-4 bg-gray-50 border-b flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div class="flex-1 relative">
+          <input type="text" id="audit-search" placeholder="Filtrar..."
+            class="pr-10 input-text w-full text-sm">
+          <span class="absolute inset-y-0 right-0 flex items-center pr-3">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-audit-all" class="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Todos</button>
+          <button id="btn-audit-pending"
+            class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded hover:bg-yellow-200">Pendientes</button>
+          <button id="btn-toggle-camera-audit" 
+            class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Cámara
+          </button>
+        </div>
+      </div>
+
+      <div id="audit-scanner-container" class="hidden p-4 bg-black flex flex-col items-center">
+        <div id="audit-reader" class="w-full max-w-sm aspect-square bg-gray-900 rounded-lg overflow-hidden border-2 border-emerald-500"></div>
+        <p class="text-white text-xs mt-2">Apunte la cámara al código de barras</p>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scrollbar" style="min-height: 0;">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-white sticky top-0 shadow-sm">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Producto</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Stock Sistema</th>
+              <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-32">Conteo Físico</th>
+              <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="audit-table-body" class="bg-white divide-y divide-gray-100 text-sm">
+            <!-- JS llenará esto -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="p-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-sm text-gray-500 w-full sm:w-auto text-center sm:text-left">
+          <span id="audit-progress" class="font-bold">0/0</span> productos contados
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button id="btn-view-discrepancies-from-audit"
+            class="w-full sm:w-auto btn-pill bg-gray-600 text-white px-6 py-2 hover:bg-gray-700 transition-all text-sm md:text-base">
+            Ver Discrepancias
+          </button>
+          <button id="btn-finish-audit"
+            class="w-full sm:w-auto btn-pill bg-emerald-600 text-white px-8 py-2 hover:bg-emerald-700 shadow-md transition-all text-sm md:text-base">
+            Finalizar Toma
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+
+  <script src="/js/html5-qrcode.min.js"></script>
+  <script src="/js/inventario.js?v=mass_update_1"></script>
+</body>
+
+</html>

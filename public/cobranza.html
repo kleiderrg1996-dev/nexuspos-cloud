@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cobranza | NexusPOS</title>
+  <link href="/css/output.css" rel="stylesheet">
+  <link href="/css/theme.css" rel="stylesheet">
+  <script src="/js/JsBarcode.all.min.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark-mode');
+    }
+  </script>
+  <div class="flex-1 flex flex-col h-screen">
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8">
+      <div class="max-w-7xl mx-auto">
+
+        <!-- HEADER -->
+        <header class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+              Cuentas por Cobrar
+            </h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Gestiona los fiados y registra abonos de tus clientes.
+              <span id="header-bcv-rate" class="ml-2 font-bold text-blue-600 dark:text-blue-400"></span>
+            </p>
+          </div>
+          <button id="btn-add-client"
+            class="flex items-center justify-center bg-blue-600 text-white py-2.5 px-5 rounded-lg font-semibold hover:bg-blue-700 shadow-md transition-transform transform hover:-translate-y-0.5">
+            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+            </svg>
+            Nuevo Cliente
+          </button>
+        </header>
+
+        <!-- SEARCH / ACTION BAR -->
+        <div
+          class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-8 sticky top-0 z-10">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                  clip-rule="evenodd" />
+              </svg>
+            </div>
+            <input type="text" id="client-search-input"
+              class="block w-full pl-10 pr-40 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
+              placeholder="Buscar cliente por nombre, cédula o teléfono...">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span id="bcv-rate-badge"
+                class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-md dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-sm">
+                Tasa BCV: --
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLIENT LIST -->
+        <div id="client-list-container" class="grid grid-cols-1 gap-4">
+          <!-- JS will render cards here -->
+        </div>
+
+        <div id="client-list-placeholder" class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            aria-hidden="true">
+            <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No hay clientes con deuda</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comienza añadiendo un cliente o realizando una venta
+            a crédito.</p>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- MODAL CLIENTE -->
+  <div id="client-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+      <h2 id="client-modal-title" class="text-xl font-semibold mb-4 text-gray-800">Añadir Nuevo Cliente</h2>
+      <form id="form-client" class="space-y-4">
+        <input type="hidden" id="client-id">
+        <div>
+          <label for="client-nombre" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+          <input type="text" id="client-nombre" required class="mt-1 block w-full input-text">
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="client-cedula" class="block text-sm font-medium text-gray-700">Cédula (Opcional)</label>
+            <input type="text" id="client-cedula" class="mt-1 block w-full input-text" placeholder="V-12345678">
+          </div>
+          <div>
+            <label for="client-telefono" class="block text-sm font-medium text-gray-700">Teléfono (Opcional)</label>
+            <input type="tel" id="client-telefono" class="mt-1 block w-full input-text" placeholder="0414-1234567">
+          </div>
+        </div>
+        <div>
+          <label for="client-direccion" class="block text-sm font-medium text-gray-700">Dirección (Opcional)</label>
+          <textarea id="client-direccion" rows="2" class="mt-1 block w-full input-text"></textarea>
+        </div>
+        <p id="client-modal-status" class="text-sm mt-3 text-center"></p>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button type="button" id="btn-cancelar-client"
+            class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-semibold hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700">
+            Guardar Cliente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL PAGO / SALDAR DEUDA -->
+  <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+      <div class="flex justify-between items-center mb-4">
+        <!-- El JS cambiará este título según el caso -->
+        <h2 id="payment-modal-title" class="text-xl font-semibold text-gray-800">Pago de Deuda</h2>
+        <button id="btn-close-payment-modal"
+          class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+      </div>
+      <form id="form-payment" class="space-y-4">
+        <input type="hidden" id="payment-client-id">
+        <input type="hidden" id="payment-sale-id">
+
+        <div class="bg-gray-100 p-4 rounded-lg">
+          <div class="flex justify-between text-lg font-medium text-gray-700">
+            <span>Cliente:</span>
+            <span id="payment-client-name" class="font-bold"></span>
+          </div>
+          <div class="flex justify-between text-2xl font-bold text-red-600 mt-2">
+            <span>Deuda Pendiente:</span>
+            <span id="payment-due-amount">0.00 Bs</span>
+          </div>
+        </div>
+
+        <div>
+          <label for="payment-amount" class="block text-sm font-medium text-gray-700">Monto a Abonar</label>
+          <input type="number" id="payment-amount" step="any" min="0.01" required class="mt-1 block w-full input-text">
+        </div>
+        <div>
+          <label for="payment-method" class="block text-sm font-medium text-gray-700">Método de Pago</label>
+          <select id="payment-method" required class="mt-1 block w-full input-text">
+            <option value="VES_EFECTIVO">Bolívares (Efectivo)</option>
+            <option value="USD_EFECTIVO">Dólares (Efectivo)</option>
+            <option value="TARJETA">Tarjeta (Bs.)</option>
+            <option value="BIOPAGO">Biopago (Bs.)</option>
+            <option value="PAGOMOVIL">Pago Móvil (Bs.)</option>
+            <option value="ZELLE">Zelle (USD)</option>
+          </select>
+        </div>
+
+        <div id="payment-usd-details" class="hidden space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Tasa</label>
+            <div class="flex gap-4">
+              <label class="inline-flex items-center">
+                <input type="radio" name="payment-rate-type" value="BCV" checked class="form-radio text-blue-600">
+                <span class="ml-2 text-sm text-gray-700">BCV</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="payment-rate-type" value="PARALELO" class="form-radio text-blue-600">
+                <span class="ml-2 text-sm text-gray-700">Paralelo</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label for="payment-usd-rate" class="block text-sm font-medium text-gray-700">Tasa de Cambio</label>
+            <input type="number" id="payment-usd-rate" step="any" min="0.01" class="mt-1 block w-full input-text"
+              placeholder="Tasa del día">
+          </div>
+        </div>
+
+        <p id="payment-modal-status" class="text-sm mt-3 text-center"></p>
+        <div class="mt-6 flex justify-end space-x-4">
+          <button type="button" id="btn-cancelar-payment"
+            class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-semibold hover:bg-gray-300">
+            Cancelar
+          </button>
+          <!-- El JS cambia este texto a "Completar Pago" cuando es Saldar Deuda -->
+          <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700">
+            Registrar Abono
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL SALDAR DEUDA / ABONAR (Compacto y Scrollable) -->
+  <div id="full-payment-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden transition-opacity">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col mx-4">
+
+      <!-- HEADER -->
+      <div class="flex justify-between items-center p-4 border-b border-gray-200">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">Abonar a Cuenta</h2>
+          <p id="full-payment-client-name" class="text-sm text-gray-600 font-medium"></p>
+        </div>
+        <button id="btn-full-cancelar-pago"
+          class="text-gray-400 hover:text-gray-700 text-3xl leading-none">&times;</button>
+      </div>
+
+      <!-- SCROLLABLE CONTENT -->
+      <div class="p-4 overflow-y-auto flex-1">
+
+        <!-- Resumen Deuda -->
+        <div class="flex justify-between items-end bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4">
+          <div>
+            <span class="text-xs text-blue-600 font-semibold uppercase tracking-wider">Deuda Total</span>
+            <div class="flex items-baseline gap-2">
+              <span id="full-modal-total-ves" class="text-2xl font-bold text-blue-800">0.00 Bs</span>
+            </div>
+          </div>
+          <span id="full-modal-total-usd" class="text-sm font-medium text-blue-600 mb-1">(0.00 $)</span>
+        </div>
+
+        <form id="form-full-payment" class="space-y-3">
+
+          <!-- Selector de Tasa y Valor -->
+          <div class="space-y-2 mb-3">
+            <div class="flex items-center justify-between text-sm">
+              <label class="font-medium text-gray-600">Tipo de Tasa:</label>
+              <div class="flex gap-3">
+                <label class="inline-flex items-center">
+                  <input type="radio" name="full-rate-type" value="BCV" checked
+                    class="form-radio text-blue-600 h-3 w-3">
+                  <span class="ml-1 text-xs text-gray-600">BCV</span>
+                </label>
+                <label class="inline-flex items-center">
+                  <input type="radio" name="full-rate-type" value="PARALELO" class="form-radio text-blue-600 h-3 w-3">
+                  <span class="ml-1 text-xs text-gray-600">Paralelo</span>
+                </label>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <label for="full-payment-usd-rate" class="font-medium text-gray-500">Valor Tasa:</label>
+              <input type="number" id="full-payment-usd-rate" step="any" min="0.01"
+                class="text-right w-24 border-b border-gray-300 focus:border-blue-500 focus:outline-none text-gray-700 py-1"
+                placeholder="0.00">
+            </div>
+          </div>
+
+          <!-- INPUTS DE PAGO (Grid ajustado) -->
+          <div class="space-y-3">
+
+            <!-- Dólares -->
+            <div class="flex items-center gap-2">
+              <div class="w-8 flex justify-center text-green-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                  </path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-600 mb-0.5">Dólares (Efectivo)</label>
+                <div class="flex shadow-sm">
+                  <input type="number" id="full-pago-usd-efectivo" placeholder="0.00" step="any" min="0"
+                    class="block w-full border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2">
+                  <button type="button" id="full-btn-pago-todo-usd"
+                    class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                    Todo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bolívares -->
+            <div class="flex items-center gap-2">
+              <div class="w-8 flex justify-center text-gray-500">
+                <span class="text-sm font-bold">Bs</span>
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-600 mb-0.5">Bolívares (Efectivo)</label>
+                <div class="flex shadow-sm">
+                  <input type="number" id="full-pago-ves-efectivo" placeholder="0.00" step="any" min="0"
+                    class="block w-full border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2">
+                  <button type="button" id="full-btn-pago-todo-ves"
+                    class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                    Todo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pago Móvil -->
+            <div class="flex items-center gap-2">
+              <div class="w-8 flex justify-center text-blue-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-600 mb-0.5">Pago Móvil</label>
+                <div class="flex shadow-sm">
+                  <input type="number" id="full-pago-pagomovil" placeholder="0.00" step="any" min="0"
+                    class="block w-full border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2">
+                  <button type="button" id="full-btn-pago-todo-pagomovil"
+                    class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                    Todo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tarjeta -->
+            <div class="flex items-center gap-2">
+              <div class="w-8 flex justify-center text-gray-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-600 mb-0.5">Tarjeta</label>
+                <div class="flex shadow-sm">
+                  <input type="number" id="full-pago-tarjeta" placeholder="0.00" step="any" min="0"
+                    class="block w-full border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2">
+                  <button type="button" id="full-btn-pago-todo-tarjeta"
+                    class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                    Todo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Biopago -->
+            <div class="flex items-center gap-2">
+              <div class="w-8 flex justify-center text-indigo-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-600 mb-0.5">Biopago</label>
+                <div class="flex shadow-sm">
+                  <input type="number" id="full-pago-biopago" placeholder="0.00" step="any" min="0"
+                    class="block w-full border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2">
+                  <button type="button" id="full-btn-pago-todo-biopago"
+                    class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                    Todo
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="flex space-x-4 mt-3">
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-600 mb-0.5">Zelle (USD)</label>
+                <div class="flex shadow-sm">
+                  <input type="number" id="full-pago-zelle" placeholder="0.00" step="any" min="0"
+                    class="block w-full border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2">
+                  <button type="button" id="full-btn-pago-todo-zelle"
+                    class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                    Todo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </form>
+
+        <!-- Feedback Dinámico (Faltante/Vuelto) -->
+        <div class="mt-4 pt-4 border-t border-gray-100">
+
+          <!-- Caso Faltante -->
+          <div id="full-faltante-container" class="space-y-1">
+            <div class="flex justify-between items-center text-orange-600">
+              <span class="text-sm font-medium">Restante por Pagar:</span>
+              <span id="full-modal-faltante-ves" class="text-lg font-bold">0.00 Bs</span>
+            </div>
+            <div class="text-right">
+              <span id="full-modal-faltante-usd" class="text-xs text-gray-500">(0.00 $)</span>
+            </div>
+          </div>
+
+          <!-- Caso Vuelto -->
+          <div id="full-vuelto-container" class="hidden space-y-1">
+            <div class="flex justify-between items-center text-green-600">
+              <span class="text-sm font-medium">Vuelto a Entregar:</span>
+              <span id="full-modal-vuelto-ves" class="text-lg font-bold">0.00 Bs</span>
+            </div>
+            <div class="text-right">
+              <span id="full-modal-vuelto-usd" class="text-xs text-gray-500">(0.00 $)</span>
+            </div>
+          </div>
+
+          <p id="full-payment-status" class="text-xs mt-2 text-center h-4"></p>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex justify-end">
+        <button id="btn-full-completar-pago"
+          class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-blue-700 shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          Procesar Pago
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL VUELTO PARA COBRANZA -->
+  <div id="full-change-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Entregar Vuelto</h2>
+      </div>
+
+      <div class="bg-green-100 p-4 rounded-lg mb-4 text-center">
+        <span class="block text-sm font-medium text-green-800">Total Vuelto a Entregar</span>
+        <span id="full-change-total-ves" class="block text-3xl font-bold text-green-700">0.00 Bs</span>
+        <span id="full-change-total-usd" class="block text-lg font-medium text-gray-600">(0.00 $)</span>
+      </div>
+
+      <form id="form-full-change" class="space-y-3">
+        <p class="text-sm text-gray-600">Indica cómo devolviste el vuelto:</p>
+
+        <!-- Vuelto USD -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Vuelto en Dólares (Efectivo)</label>
+          <div class="mt-1 flex gap-2">
+            <input type="number" id="full-change-usd-efectivo" placeholder="Monto en $" step="any" min="0"
+              class="mt-1 block w-full input-text full-change-input flex-1">
+            <button type="button" id="full-btn-change-todo-usd"
+              class="px-3 py-2 text-xs bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700">
+              Completo
+            </button>
+          </div>
+        </div>
+
+        <!-- Vuelto Bs -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Vuelto en Bolívares (Efectivo)</label>
+          <div class="mt-1 flex gap-2">
+            <input type="number" id="full-change-ves-efectivo" placeholder="Monto en Bs." step="any" min="0"
+              class="mt-1 block w-full input-text full-change-input flex-1">
+            <button type="button" id="full-btn-change-todo-ves"
+              class="px-3 py-2 text-xs bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700">
+              Completo
+            </button>
+          </div>
+        </div>
+
+        <!-- Vuelto Pago móvil -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Vuelto por Pago Móvil (Bs.)</label>
+          <div class="mt-1 flex gap-2">
+            <input type="number" id="full-change-pagomovil" placeholder="Monto en Bs." step="any" min="0"
+              class="mt-1 block w-full input-text full-change-input flex-1">
+            <button type="button" id="full-btn-change-todo-pm"
+              class="px-3 py-2 text-xs bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700">
+              Completo
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="bg-red-100 p-3 rounded-lg mt-4 text-center hidden" id="full-change-remaining-container">
+        <span class="block text-sm font-medium text-red-800">Vuelto restante por asignar</span>
+        <span id="full-change-remaining-ves" class="block text-xl font-bold text-red-700">0.00 Bs</span>
+      </div>
+
+      <p id="full-change-status" class="text-sm mt-2 text-center"></p>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" id="btn-full-cancelar-vuelto"
+          class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-semibold hover:bg-gray-300">
+          Cancelar
+        </button>
+        <button id="btn-full-confirmar-vuelto"
+          class="bg-gray-700 text-white py-2 px-4 rounded-md font-semibold hover:bg-gray-800 disabled:opacity-50">
+          Confirmar Vuelto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MÓVIL -->
+  <div id="mobile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Acceder desde tu Móvil</h2>
+        <button id="close-mobile-modal" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="text-gray-700 space-y-4">
+        <ol class="list-decimal list-inside space-y-2">
+          <li>Asegúrate de que tu computadora y tu móvil estén conectados a la <strong>misma red Wi-Fi</strong>.</li>
+          <li>En el navegador de tu móvil, ingresa <strong>una</strong> de las siguientes direcciones:
+            <div id="local-ip-urls" class="mt-1 text-center bg-gray-100 p-2 rounded border border-gray-300">
+              <span class="text-gray-500 text-sm">Obteniendo dirección...</span>
+            </div>
+          </li>
+          <li>O escanea este código QR con la cámara de tu celular:
+            <div
+              class="mt-2 flex justify-center items-center bg-gray-100 p-2 rounded border border-gray-300 min-h-[150px]">
+              <img id="qr-code-image" src="" alt="Código QR" class="hidden max-w-[140px] max-h-[140px]">
+              <span id="qr-code-loading" class="text-gray-500 text-sm">Generando QR...</span>
+            </div>
+          </li>
+        </ol>
+        <p class="text-xs text-gray-500">Nota: Si no funciona, revisa la conexión Wi-Fi y el firewall de tu computadora.
+        </p>
+      </div>
+      <div class="mt-6 text-right">
+        <button id="close-mobile-modal-btn"
+          class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-semibold hover:bg-gray-300">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL VERIFICACIÓN ADMIN -->
+  <div id="admin-password-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+      <form id="form-verify-password">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Verificación de Administrador</h2>
+        <p class="text-sm text-gray-600 mb-4">Se requiere contraseña de administrador para continuar.</p>
+        <div>
+          <label for="verify-password-input" class="block text-sm font-medium text-gray-700">Contraseña</label>
+          <input type="password" id="verify-password-input" class="mt-1 block w-full input-text" required>
+        </div>
+        <p id="verify-password-status" class="text-sm mt-3 text-center"></p>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button type="button" id="btn-cancel-verification"
+            class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md font-semibold hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700">
+            Verificar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/cobranza.js"></script>
+</body>
+
+</html>

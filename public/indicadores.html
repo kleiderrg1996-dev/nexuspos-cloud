@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | NexusPOS</title>
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <link href="/css/toast.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
+        .text-glow-green { text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        .text-glow-red { text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+        .text-glow-blue { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .text-glow-purple { text-shadow: 0 0 20px rgba(167, 139, 250, 0.6); }
+        .force-pill { border-radius: 9999px !important; }
+
+        /* Ocultar ícono nativo del navegador para que sea más limpio */
+        .clean-date::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 aurora-mesh min-h-screen">
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+
+    <div class="flex-1 flex flex-col min-h-screen border-0">
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 border-0">
+            <div class="max-w-7xl mx-auto border-0">
+
+                <!-- HEADER TECH - REDISEÑADO CARPETA STYLE -->
+                <header class="mb-6 animate-fade-in card-tech relative overflow-hidden group">
+                    <!-- Mesh Background para el Header -->
+                    <div class="mesh-bg bg-blue-600 opacity-20 group-hover:opacity-30 transition-opacity duration-1000"></div>
+                    
+                    <!-- Forzado a una sola fila en tabletas y escritorio (md:flex-row) -->
+                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 p-4 md:px-6 md:py-4">
+                        
+                        <!-- Columna 1: Branding -->
+                        <div class="flex items-center gap-3 min-w-fit flex-shrink-0">
+                            <div class="p-2.5 tech-gradient-1 rounded-2xl shadow-xl shadow-blue-500/30 transform transition-transform group-hover:scale-105">
+                                <i class="fa-solid fa-chart-pie text-xl text-white"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-lg lg:text-xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic leading-none mb-0.5">
+                                    DASHBOARD <span class="text-blue-600 dark:text-blue-400">PRO <small class="text-[8px] opacity-30 not-italic">v5.4</small></span>
+                                </h1>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="h-1 w-4 bg-blue-500 rounded-full"></div>
+                                    <p class="text-[9px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest opacity-80">Nexus Inteligente</p>
+                                </div>
+                                <!-- ✅ Estado de Licencia (mismo que en Configuracion) -->
+                                <div id="dashboard-license-status" class="mt-1 text-[9px] font-black uppercase tracking-widest hidden">
+                                    <i class="fa-solid fa-key mr-1"></i>
+                                    <span id="dashboard-license-text">Cargando licencia...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna 2: Central Clock Widget -->
+                        <div class="flex flex-col items-center justify-center flex-1 my-1 md:my-0 min-w-[200px]">
+                            <div class="relative w-full flex justify-center">
+                                <div class="absolute inset-0 bg-blue-500/10 blur-xl rounded-full animate-pulse w-3/4 left-1/8"></div>
+                                <div class="relative flex flex-col items-center z-10">
+                                    <span id="digital-clock" class="text-2xl lg:text-3xl font-black text-gray-900 dark:text-white tabular-nums tracking-tighter drop-shadow-lg drop-shadow-blue-500/20 leading-none">00:00:00 AM</span>
+                                    <div id="live-indicator" class="mt-1 flex items-center gap-1.5 px-3 py-0.5 bg-green-500/10 rounded-full border border-green-500/20 opacity-0 transition-all duration-700 shadow-lg shadow-green-500/5">
+                                        <span class="relative flex h-1.5 w-1.5">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                                        </span>
+                                        <span class="text-[8px] font-black text-green-600 dark:text-green-400 uppercase tracking-widest leading-none">En Vivo</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna 3: Filtros & Acciones -->
+                        <div class="flex flex-wrap items-center justify-end gap-2 bg-white dark:bg-[#0f172a] p-1.5 sm:p-2 rounded-xl border border-gray-300 dark:border-white/10 shadow-md w-full md:w-auto overflow-hidden">
+                            <span class="text-xs font-bold text-gray-400 uppercase ml-2 select-none hidden sm:block">Filtrar:</span>
+                            <div class="flex items-center gap-1">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Desde</label>
+                                <input type="date" id="dash-start-date"
+                                    class="text-sm border-0 focus:ring-0 text-gray-800 dark:text-white bg-gray-50 dark:bg-black/20 rounded p-1 w-28 sm:w-32 font-medium outline-none">
+                            </div>
+                            <div class="flex items-center gap-1 border-l border-gray-200 dark:border-white/10 pl-2">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Hasta</label>
+                                <input type="date" id="dash-end-date"
+                                    class="text-sm border-0 focus:ring-0 text-gray-800 dark:text-white bg-gray-50 dark:bg-black/20 rounded p-1 w-28 sm:w-32 font-medium outline-none">
+                            </div>
+                            <button id="btn-refresh-dash"
+                                class="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm ml-1 flex items-center justify-center shrink-0"
+                                title="Actualizar Dashboard">
+                                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </button>
+                            <button id="btn-theme-toggle" class="p-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition shadow-sm flex items-center justify-center shrink-0 w-[40px] h-[40px]" title="Cambiar Tema">
+                                <i class="fa-solid fa-moon dark:hidden text-[1.1rem]"></i>
+                                <i class="fa-solid fa-sun hidden dark:block text-yellow-500 text-[1.1rem]"></i>
+                            </button>
+                            <script>
+                                document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+                                    document.body.classList.toggle('dark-mode');
+                                    const isDark = document.body.classList.contains('dark-mode');
+                                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                                    window.dispatchEvent(new Event('theme-changed'));
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </header>
+
+                <div id="dashboard-loading" class="flex flex-col items-center justify-center py-24">
+                    <div class="relative w-16 h-16">
+                        <div class="absolute inset-0 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin"></div>
+                        <div class="absolute inset-2 rounded-full border-4 border-purple-500/20 border-b-purple-500 animate-spin-slow"></div>
+                    </div>
+                    <p class="mt-4 font-bold text-blue-600 animate-pulse uppercase tracking-widest text-xs">Sincronizando Datos</p>
+                </div>
+
+                <div id="dashboard-content" class="hidden space-y-8 animate-slide-up">
+
+                    <!-- KPI GRID - REORGANIZADO PARA FINANZAS -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                        <!-- 1. GANANCIA BRUTA (AZUL CLARO) -->
+                        <div class="card-tech group h-full flex flex-col">
+                            <div class="mesh-bg" style="background-color: #3b82f6 !important;"></div>
+                            <div class="relative z-10 flex-1 flex flex-col text-gray-900 dark:text-white">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/80">Utilidad Bruta</span>
+                                    <div class="p-4 tech-gradient-cash rounded-2xl shadow-lg shadow-blue-500/40 text-white animate-pulse"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
+                                </div>
+                                <p class="text-xs font-black text-gray-500 uppercase mb-1">Margen de Ventas</p>
+                                <h2 id="stat-profit-ves" class="indicator-val text-3xl font-black text-glow-blue">0.00 Bs</h2>
+                                <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 dark:border-white/5">
+                                    <span id="stat-profit-usd" class="text-sm font-black text-blue-600">0.00 $</span>
+                                </div>
+                            </div>
+                        </div>
+
+                         <!-- 2. GASTOS Y EGRESOS (NARANJA/ROJO) -->
+                         <div class="card-tech group h-full flex flex-col">
+                            <div class="mesh-bg" style="background-color: #ef4444 !important;"></div>
+                            <div class="relative z-10 flex-1 flex flex-col text-gray-900 dark:text-white">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600/80">Egresos Totales</span>
+                                    <div class="p-4 tech-gradient-debt rounded-2xl shadow-lg shadow-red-500/40 text-white animate-pulse"><i class="fa-solid fa-money-bill-transfer text-xl"></i></div>
+                                </div>
+                                <p class="text-xs font-black text-gray-500 uppercase mb-1">Gastos + Retiros</p>
+                                <h2 id="stat-expenses-ves" class="indicator-val text-3xl font-black text-glow-red">0.00 Bs</h2>
+                                <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 dark:border-white/5">
+                                    <span id="stat-expenses-usd" class="text-sm font-black text-orange-500">0.00 $</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. UTILIDAD NETA (ESMERALDA - DESTACADO) -->
+                        <div class="card-tech group h-full flex flex-col ring-2 ring-emerald-500/30 shadow-2xl">
+                            <div class="mesh-bg" style="background-color: #34d399 !important;"></div>
+                            <div class="relative z-10 flex-1 flex flex-col text-gray-900 dark:text-white">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Balance Real</span>
+                                    <div class="p-4 tech-gradient-profit rounded-2xl shadow-lg shadow-emerald-500/40 text-white animate-pulse"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                                </div>
+                                <p class="text-xs font-black text-emerald-500 uppercase mb-1">Utilidad Neta Hoy</p>
+                                <h2 id="stat-net-profit-ves" class="indicator-val text-3xl font-black text-glow-green">0.00 Bs</h2>
+                                <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 dark:border-white/5">
+                                    <span id="stat-net-profit-usd" class="text-sm font-black text-emerald-400">0.00 $</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. FIADO (ROJO) -->
+                        <div class="card-tech group h-full flex flex-col">
+                            <div class="mesh-bg" style="background-color: #ef4444 !important;"></div>
+                            <div class="relative z-10 flex-1 flex flex-col text-gray-900 dark:text-white">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-red-500/70">Cartera Pendiente</span>
+                                    <div class="p-4 tech-gradient-debt rounded-2xl shadow-lg shadow-red-500/40 text-white animate-pulse"><i class="fa-solid fa-hand-holding-dollar text-xl"></i></div>
+                                </div>
+                                <p class="text-xs font-black text-gray-500 uppercase mb-1">Deuda por Cobrar</p>
+                                <h2 id="stat-total-fiado-usd" class="indicator-val text-3xl font-black text-glow-red">0.00 $</h2>
+                                <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 dark:border-white/5">
+                                    <span id="stat-total-fiado-ves" class="text-sm font-black text-red-600">0.00 Bs</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. INGRESOS (AZUL) -->
+                        <div class="card-tech group h-full flex flex-col">
+                            <div class="mesh-bg" style="background-color: #06b6d4 !important;"></div>
+                            <div class="relative z-10 flex-1 flex flex-col text-gray-900 dark:text-white">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/70">Caja Operativa</span>
+                                    <div class="p-4 tech-gradient-cash rounded-2xl shadow-lg shadow-blue-500/40 text-white animate-pulse"><i class="fa-solid fa-vault text-xl"></i></div>
+                                </div>
+                                <p class="text-xs font-black text-gray-500 uppercase mb-1">Dinero Cobrado</p>
+                                <h2 id="stat-revenue-ves" class="indicator-val text-3xl font-black text-glow-blue">0.00 Bs</h2>
+                                <div class="mt-auto pt-4 flex flex-col gap-1 border-t border-gray-100 dark:border-white/5">
+                                    <div class="flex items-center justify-between">
+                                        <span id="stat-revenue-usd" class="text-sm font-black text-blue-600">0.00 $</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[10px] font-bold opacity-70">
+                                        <span class="text-gray-500 uppercase tracking-tighter">Ventas Hoy:</span>
+                                        <span id="stat-revenue-ventas" class="text-blue-600">0.00 Bs</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[10px] font-bold opacity-70">
+                                        <span class="text-gray-500 uppercase tracking-tighter">Abonos Recibidos:</span>
+                                        <span id="stat-revenue-abonos" class="text-indigo-600">0.00 Bs</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. VOLUMEN DE VENTAS (PÚRPURA NEÓN) -->
+                        <div class="card-tech group h-full flex flex-col overflow-hidden">
+                            <div class="mesh-bg" style="background-color: #9333ea !important;"></div>
+                            <div class="relative z-10 flex-1 flex flex-col text-gray-900 dark:text-white">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-purple-600/80">Pulso Operativo</span>
+                                    <div class="p-4 bg-purple-600 rounded-2xl shadow-lg shadow-purple-500/40 text-white animate-pulse">
+                                        <i class="fa-solid fa-receipt text-xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs font-black text-gray-500 uppercase mb-1">Operaciones</p>
+                                <h2 id="stat-sales-count" class="indicator-val text-4xl font-black text-glow-purple">0</h2>
+                                <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-200 dark:border-white/5">
+                                    <div class="flex flex-col">
+                                        <span class="text-[9px] font-black text-purple-500 uppercase">Ticket Promedio</span>
+                                        <span id="stat-avg-ticket" class="text-sm font-black text-gray-800 dark:text-white">0.00 Bs</span>
+                                    </div>
+                                    <i class="fa-solid fa-arrow-trend-up text-purple-400 opacity-30 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CHARTS GRID - UNIFICADO -->
+                    <div class="grid grid-cols-1 gap-6 items-start">
+                        <!-- CHART UNIFICADO: VENTAS VS GANANCIAS VS GASTOS -->
+                        <div class="card-tech animate-slide-up h-auto flex flex-col">
+                            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-8">
+                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                    <div class="w-1.5 h-4 bg-blue-600 rounded-full"></div>
+                                    Análisis de Rentabilidad Total (360°)
+                                </h3>
+                                <div style="display: flex; gap: 8px; width: auto; justify-content: flex-end; flex-wrap: wrap;">
+                                    <!-- Leyendas Consolidadas -->
+                                    <div class="legend-badge" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; background: #1e293b; border: 1px solid rgba(59, 130, 246, 0.3);">
+                                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; flex-shrink: 0;"></div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span style="font-size: 8px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">VENTAS</span>
+                                            <span id="legend-total-ventas" style="font-size: 12px; font-weight: 900; color: #e2e8f0; font-family: 'JetBrains Mono', monospace;">0.00 Bs</span>
+                                        </div>
+                                    </div>
+                                    <div class="legend-badge" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; background: #1e293b; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex-shrink: 0;"></div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span style="font-size: 8px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">GANANCIA</span>
+                                            <span id="legend-total-ganancias" style="font-size: 12px; font-weight: 900; color: #e2e8f0; font-family: 'JetBrains Mono', monospace;">0.00 Bs</span>
+                                        </div>
+                                    </div>
+                                    <div class="legend-badge" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; flex-shrink: 0;"></div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span style="font-size: 8px; font-weight: 900; color: #94a3b8; text-transform: uppercase;">GASTOS</span>
+                                            <span id="legend-total-gastos-all" style="font-size: 12px; font-weight: 900; color: #e2e8f0; font-family: 'JetBrains Mono', monospace;">0.00 Bs</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="relative h-[320px]">
+                                <canvas id="chart-sales-profit"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DETAILS GRID -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+                        <div class="card-tech h-full flex flex-col">
+                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <div class="w-1.5 h-4 bg-blue-500 rounded-full"></div>
+                                Productos Elite
+                             </h3>
+                            <div class="relative h-[200px] mb-6">
+                                <canvas id="chart-top-products"></canvas>
+                            </div>
+                             <div class="custom-scrollbar overflow-y-auto max-h-[300px] flex-1">
+                                <ul id="top-products-list" class="space-y-4"></ul>
+                            </div>
+                        </div>
+
+                        <div class="card-tech border-l-4 border-l-orange-500 h-full flex flex-col">
+                            <h3 class="text-xs font-black text-orange-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                Alertas de Stock
+                            </h3>
+                            <div class="custom-scrollbar overflow-y-auto max-h-[300px] flex-1">
+                                <ul id="low-stock-list" class="space-y-4"></ul>
+                            </div>
+                        </div>
+
+                        <!-- 🆕 ALERTAS DE VENCIMIENTO -->
+                        <div class="card-tech border-l-4 border-l-red-600 h-full flex flex-col">
+                            <h3 class="text-xs font-black text-red-600 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-xmark"></i>
+                                Alertas de Vencimiento
+                            </h3>
+                        <div class="custom-scrollbar overflow-y-auto max-h-[300px] flex-1">
+                                <ul id="expiration-alerts-list" class="space-y-4"></ul>
+                            </div>
+                        </div>
+
+                        <!-- 1. Valoración de Activos (Reducida) -->
+                        <div class="card-tech relative flex flex-col overflow-hidden rounded-xl">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[40px] rounded-full"></div>
+                            <div class="relative z-10 flex-1 flex flex-col">
+                                <h3 class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-boxes-stacked"></i>
+                                    Valoración de Activos
+                                </h3>
+                                <div class="relative h-[180px] mb-4">
+                                    <canvas id="chart-inventory-dist"></canvas>
+                                </div>
+                                <div class="space-y-3 mt-auto">
+                                    <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50/50 dark:bg-white/5 border border-gray-100 dark:border-white/10">
+                                        <span class="text-[9px] font-black text-gray-500 uppercase">Inversión</span>
+                                        <div class="text-right">
+                                            <p id="stat-inventory-cost-usd" class="text-xs font-black text-gray-900 dark:text-white">0.00 $</p>
+                                            <p id="stat-inventory-cost-ves" class="text-[8px] font-bold text-gray-500 opacity-70">0.00 Bs</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2 rounded-lg bg-green-500/5 border border-green-500/20">
+                                        <span class="text-[9px] font-black text-green-600 uppercase">Proyección</span>
+                                        <div class="text-right">
+                                            <p id="stat-inventory-sale-usd" class="text-xs font-black text-green-500">0.00 $</p>
+                                            <p id="stat-inventory-sale-ves" class="text-[8px] font-bold text-green-400 opacity-70">0.00 Bs</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Top 5 Deudores (Cuentas por Cobrar) -->
+                        <div class="card-tech relative flex flex-col overflow-hidden rounded-xl">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-[40px] rounded-full"></div>
+                            <div class="relative z-10 flex-1 flex flex-col">
+                                <h3 class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                                    Mayores Deudores
+                                </h3>
+                                <div class="relative h-[200px] flex-1">
+                                    <canvas id="chart-top-debtors"></canvas>
+                                </div>
+                                <p class="text-[9px] text-center text-gray-400 uppercase mt-4 font-bold tracking-tighter">Top 5 clientes con saldo pendiente (Bs / $)</p>
+                            </div>
+                        </div>
+
+                        <!-- 3. Inversión por Categoría -->
+                        <div class="card-tech relative flex flex-col overflow-hidden rounded-xl">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-[40px] rounded-full"></div>
+                            <div class="relative z-10 flex-1 flex flex-col">
+                                <h3 class="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-tags"></i>
+                                    Inversión por Categoría
+                                </h3>
+                                <div class="relative h-[200px] flex-1">
+                                    <canvas id="chart-category-valuation"></canvas>
+                                </div>
+                                <p class="text-[9px] text-center text-gray-400 uppercase mt-4 font-bold tracking-tighter">Distribución del capital en stock (Bs / $)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/js/indicadores.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libros Fiscales (SENIAT)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/c101fe97b0.js" crossorigin="anonymous"></script>
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- ESTILOS NEXUS -->
+    <link rel="stylesheet" href="css/nexusAI.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SheetJS para exportar a Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; color: #111827; }
+        .nexus-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 24px; }
+        .nexus-header { border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px; color: #1f2937; font-weight: bold; font-size: 1.25rem; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
+        .btn-excel { background-color: #10b981; color: white; }
+        .btn-excel:hover { background-color: #059669; transform: translateY(-1px); }
+        
+        select, input { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 14px; width: 100%; transition: all 0.2s; background-color: #f9fafb; font-size: 14px;}
+        select:focus, input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); background-color: #fff;}
+        label { font-size: 0.875rem; font-weight: 500; color: #4b5563; margin-bottom: 0.5rem; display: block; }
+        
+        .report-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+        .report-section:hover {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.05);
+        }
+        .report-icon {
+            font-size: 2rem;
+            color: #3b82f6;
+            margin-bottom: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-5xl mx-auto animate__animated animate__fadeIn">
+        
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                <i class="fa-solid fa-book-journal-whills text-blue-600 mr-3"></i>
+                Libros Fiscales (SENIAT)
+            </h1>
+        </div>
+
+        <div class="nexus-card">
+            <div class="nexus-header">
+                Generación y Exportación de Reportes Reglamentarios
+            </div>
+            
+            <p class="text-gray-600 mb-8">
+                Utilice esta herramienta para generar los libros obligatorios según la Providencia Administrativa N° 0071 y normativas vigentes del impuesto al valor agregado e Impuesto sobre la Renta.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Parámetros Comunes -->
+                <div class="col-span-1 md:col-span-3 bg-white p-4 border border-gray-200 rounded-lg mb-4 flex flex-wrap gap-4 items-end">
+                    <div class="w-full md:w-1/4">
+                        <label>Mes Fiscal</label>
+                        <select id="mesSelect">
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-1/4">
+                        <label>Año Fiscal</label>
+                        <input type="number" id="anioSelect" value="2026" min="2020" max="2100">
+                    </div>
+                    <div class="w-full md:w-1/3 text-sm text-gray-500 pb-2">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Estos parámetros aplican a todos los reportes solicitados en esta página.
+                    </div>
+                </div>
+
+                <!-- Libro de Compras -->
+                <div class="report-section text-center flex flex-col items-center">
+                    <div class="report-icon">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Libro de Compras</h2>
+                    <p class="text-sm text-gray-500 mb-6 flex-grow">
+                        Libro obligatorio de Registro de Compras (IVA) detallado por proovedores y comprobantes de retención.
+                    </p>
+                    <button id="btnLibroCompras" class="btn btn-excel w-full">
+                        <i class="fa-solid fa-file-excel"></i> Exportar a Excel
+                    </button>
+                </div>
+
+                <!-- Libro de Ventas -->
+                <div class="report-section text-center flex flex-col items-center">
+                    <div class="report-icon">
+                        <i class="fa-solid fa-cash-register"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Libro de Ventas</h2>
+                    <p class="text-sm text-gray-500 mb-6 flex-grow">
+                        Libro obligatorio de Registro de Ventas (IVA) documentado incluyendo números de control y bases imponibles.
+                    </p>
+                    <button id="btnLibroVentas" class="btn btn-excel w-full">
+                        <i class="fa-solid fa-file-excel"></i> Exportar a Excel
+                    </button>
+                </div>
+
+                <!-- Libro de Inventario (Art. 177) -->
+                <div class="report-section text-center flex flex-col items-center">
+                    <div class="report-icon">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Libro de Inventario</h2>
+                    <p class="text-sm text-gray-500 mb-6 flex-grow">
+                        Control de Movimiento de Entradas y Salidas de Mercancías (Art. 177 del Reglamento de la Ley de IVA).
+                    </p>
+                    <button id="btnLibroInventario" class="btn btn-excel w-full mb-2">
+                        <i class="fa-solid fa-file-excel"></i> Exportar a Excel
+                    </button>
+                    <button id="btnLibroInventarioPDF" class="btn bg-red-600 text-white hover:bg-red-700 w-full rounded p-2 font-bold text-sm">
+                        <i class="fa-solid fa-file-pdf"></i> Reporte PDF (Art. 177)
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script principal -->
+    <script src="js/libros_fiscales.js"></script>
+</body>
+</html>

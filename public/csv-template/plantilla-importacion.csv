@@ -1,0 +1,4 @@
+Nombre;Costo;Moneda;Ganancia;Stock;Categoria;Tipo_Venta;Proveedor;Barcode;Costo_Bulto;Unidades_Bulto;Activo
+"Harina Pan 1kg";1.50;BCV;30;24;Alimentos;UNIDAD;Polar;759123456;150.00;20;1
+"Queso Blanco 1kg";5.00;USD;25;10.5;Charcuteria;PESO;Local;;0;1;1
+"Refresco 2L (Bulto)";0;BCV;30;50;Bebidas;UNIDAD;CocaCola;0800-2L;12.00;6;1

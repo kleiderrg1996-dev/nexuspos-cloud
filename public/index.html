@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusPOS</title>
+    <link rel="icon" type="image/svg+xml" href="/images/nexuspos-icon.svg">
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <link href="/css/toast.css" rel="stylesheet">
+    <link href="/css/nexusAI.css" rel="stylesheet">
+    <script src="/js/JsBarcode.all.min.js"></script>
+    <script src="/js/toast.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-100">
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+
+    <div class="md:flex h-screen overflow-hidden">
+
+        <div id="sidebar-container"></div>
+
+        <div class="flex-1 flex flex-col h-screen relative">
+            <div id="topbar-container"></div>
+
+            <iframe name="content-frame" id="content-frame" src="" class="flex-1 w-full h-full border-0"
+                frameborder="0">
+            </iframe>
+
+            <!-- WhatsApp Drawer (Opera Style) -->
+            <div id="whatsapp-drawer"
+                class="fixed top-0 right-0 h-full w-[450px] bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-[60] border-l border-gray-200">
+                <div class="flex flex-col h-full">
+                    <div class="p-4 bg-[#075e54] text-white flex justify-between items-center shadow-md">
+                        <div class="flex items-center">
+                            <i class="fab fa-whatsapp text-2xl mr-2"></i>
+                            <span class="font-bold">WhatsApp Web</span>
+                        </div>
+                        <button id="close-whatsapp-drawer"
+                            class="hover:bg-[#128c7e] p-1 rounded-full transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 bg-[#f0f2f5] relative">
+                        <div id="whatsapp-loading"
+                            class="absolute inset-0 flex items-center justify-center bg-white z-10 transition-opacity duration-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fab fa-whatsapp text-5xl text-[#25d366] animate-pulse"></i>
+                                <p class="mt-2 text-gray-500 text-sm">Cargando WhatsApp...</p>
+                            </div>
+                        </div>
+                        <iframe id="whatsapp-iframe" src="about:blank" class="w-full h-full border-0"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="modal-content p-8 shadow-2xl w-full max-w-md animate-scale-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Acceder desde tu Móvil</h2>
+                <button id="close-mobile-modal"
+                    class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="text-gray-700 space-y-4">
+                <ol class="list-decimal list-inside space-y-2">
+                    <li>Asegúrate de que tu computadora y tu móvil estén conectados a la <strong>misma red
+                            Wi-Fi</strong>.</li>
+                    <li>En el navegador de tu móvil, ingresa <strong>una</strong> de las siguientes direcciones:
+                        <div id="local-ip-urls" class="mt-1 text-center bg-gray-100 p-2 rounded border border-gray-300">
+                            <span class="text-gray-500 text-sm">Obteniendo dirección...</span>
+                        </div>
+                    </li>
+                    <li>O escanea este código QR con la cámara de tu celular:
+                        <div
+                            class="mt-2 flex justify-center items-center bg-gray-100 p-2 rounded border border-gray-300 min-h-[150px]">
+                            <img id="qr-code-image" src="" alt="Código QR" class="hidden max-w-[140px] max-h-[140px]">
+                            <span id="qr-code-loading" class="text-gray-500 text-sm">Generando QR...</span>
+                        </div>
+                    </li>
+                </ol>
+
+                <div id="tunnel-access-section" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+                    <h3 class="text-sm font-bold text-green-800 mb-1 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                        </svg>
+                        Acceso desde Internet
+                    </h3>
+                    <p class="text-[11px] text-green-700 mb-2">Conecta desde cualquier lugar del mundo sin estar en la misma red:</p>
+                    <div class="flex items-center gap-2">
+                        <div id="tunnel-url-display" class="flex-1 text-center bg-white p-2 rounded border border-green-300">
+                            <span class="text-gray-500 text-sm">Conectando túnel...</span>
+                        </div>
+                        <button id="copy-tunnel-btn" onclick="copyTunnelLink()" class="hidden bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-all">Copiar</button>
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-500">Nota: Si no funciona, revisa la conexión Wi-Fi y el firewall de tu
+                    computadora.</p>
+
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                    <h3 class="text-sm font-bold text-blue-800 mb-1 flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        ¿No funciona Cámara o Micrófono?
+                    </h3>
+                    <p class="text-[11px] text-blue-700 leading-tight">
+                        Los navegadores bloquean estos permisos en conexiones <strong>HTTP</strong>. Para habilitarlos:
+                    </p>
+                    <ul class="text-[10px] text-blue-600 mt-1 list-disc list-inside space-y-0.5">
+                        <li>En Chrome escribe: <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>
+                        </li>
+                        <li>Pega la dirección de arriba (ej: <code>http://192.168.1.5:3050</code>) en el cuadro de
+                            texto.</li>
+                        <li>Cambia a <strong>Enabled</strong> y reinicia el navegador.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 text-right">
+                <button id="close-mobile-modal-btn"
+                    class="bg-gray-100 text-gray-700 py-3 px-6 rounded-full font-bold hover:bg-gray-200 transition-all duration-200">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-password-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="modal-content p-8 shadow-2xl w-full max-w-sm animate-scale-in">
+            <form id="form-verify-password">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Verificación de Administrador</h2>
+                <p class="text-sm text-gray-600 mb-4">Se requiere contraseña de administrador para continuar.</p>
+                <div>
+                    <label for="verify-password-input"
+                        class="block text-sm font-medium text-gray-700">Contraseña</label>
+                    <input type="password" id="verify-password-input"
+                        class="mt-2 block w-full p-3 bg-gray-50 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        required>
+                </div>
+                <p id="verify-password-status" class="text-sm mt-3 text-center"></p>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="btn-cancel-verification"
+                        class="bg-gray-100 text-gray-700 py-3 px-6 rounded-full font-bold hover:bg-gray-200 transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="bg-blue-600 text-white py-3 px-6 rounded-full font-bold hover:bg-blue-700 transition-all shadow-md">
+                        Verificar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="sale-complete-modal"
+        class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <div class="modal-content p-8 shadow-2xl w-full max-w-sm text-center animate-scale-in">
+            <div class="flex justify-center">
+                <svg class="w-16 h-16 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+            </div>
+            <h2 id="sale-complete-message" class="text-xl font-semibold text-gray-800 mt-4 mb-2">¡Venta Completada!</h2>
+            <div class="flex flex-col gap-3 mt-4">
+                <button id="btn-close-sale-complete"
+                    class="w-full bg-blue-600 text-white py-4 px-6 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95">
+                    Aceptar
+                </button>
+                <button id="btn-whatsapp-sale-complete"
+                    style="background-color: #ffffff !important; color: #25D366 !important; border: 2px solid #25D366 !important;"
+                    class="w-full py-4 px-6 rounded-2xl font-bold hover:!bg-[#25D366] hover:!text-white transition-all shadow-[0_4px_14px_0_rgba(37,211,102,0.3)] flex items-center justify-center gap-2 active:scale-95 group">
+                    <i class="fab fa-whatsapp text-xl group-hover:scale-110 transition-transform"></i>
+                    Enviar por WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="global-alert-modal"
+        class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <div class="modal-content p-8 shadow-2xl w-full max-w-md animate-scale-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="global-alert-title" class="text-xl font-semibold text-gray-800">Alerta del Sistema</h2>
+                <button id="btn-close-global-alert"
+                    class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+            </div>
+            <p id="global-alert-message" class="text-gray-700 mb-6 text-center"></p>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" id="btn-global-cancel"
+                    class="bg-gray-100 text-gray-700 py-3 px-6 rounded-full font-bold hover:bg-gray-200 transition-all hidden">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-global-ok"
+                    class="bg-blue-600 text-white py-3 px-8 rounded-full font-bold hover:bg-blue-700 transition-all shadow-md">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Info Modal (Initial Setup) -->
+    <div id="contact-info-modal"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden" style="z-index: 9999">
+        <div class="modal-content p-10 shadow-2xl w-full max-w-md animate-scale-in">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Bienvenido a NexusPOS</h2>
+                <p class="text-gray-600 mt-2">Introduce tus datos para iniciar la prueba.</p>
+            </div>
+
+            <form id="form-contact-info">
+                <div class="mb-5">
+                    <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">Número de Teléfono
+                        (WhatsApp)</label>
+                    <input type="tel" id="contact-phone"
+                        class="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        required placeholder="Ej: 0414-1234567">
+                </div>
+                <div class="mb-6">
+                    <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">Correo
+                        Electrónico</label>
+                    <input type="email" id="contact-email"
+                        class="w-full p-4 bg-gray-50 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        required placeholder="ejemplo@correo.com">
+                </div>
+
+                <p id="contact-status" class="text-sm mb-4 text-center text-red-600 font-medium hidden"></p>
+
+                <button type="submit" id="btn-save-contact"
+                    class="w-full bg-blue-600 text-white py-4 px-6 rounded-full font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-95">
+                    Registrar y Continuar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Historial de Cierres Z -->
+    <div id="cierreZHistoryModal"
+      class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-40">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b">
+          <h2 class="text-lg font-semibold text-gray-800">
+            Historial de Cierres Z
+          </h2>
+          <button type="button" id="btnCloseCierreZHistory"
+            class="text-gray-500 hover:text-gray-700 text-xl leading-none">
+            &times;
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 flex-1 overflow-y-auto overflow-x-auto">
+          <!-- Filtros de Fecha para Historial Z -->
+          <div
+            class="flex flex-wrap items-end gap-3 mb-6 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div class="flex-1 min-w-[120px]">
+              <label class="block text-xs font-bold text-gray-400 uppercase mb-1 ml-1">Desde</label>
+              <input type="date" id="z-history-start-date"
+                class="block w-full text-sm border-0 bg-transparent focus:ring-0 text-gray-700 p-1">
+            </div>
+            <div class="flex-1 min-w-[120px] border-l border-gray-200 pl-2">
+              <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Hasta</label>
+              <input type="date" id="z-history-end-date"
+                class="block w-full text-sm border-0 bg-transparent focus:ring-0 text-gray-700 p-1">
+            </div>
+            <button id="btn-search-z-history"
+              class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1 font-bold text-xs uppercase">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              Filtrar
+            </button>
+            <button id="btn-clear-z-history"
+              class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-xs uppercase hover:bg-gray-300 transition-colors shadow-sm">
+              Limpiar
+            </button>
+            <button id="btn-export-z-history-excel" title="Exportar Historial"
+              class="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm">
+              <svg class="w-5 h-5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Botones Rápidos de Fecha (Z History) -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button
+              class="btn-quick-date-z text-[10px] px-2 py-1 bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition-colors text-gray-600"
+              data-range="today">Hoy</button>
+            <button
+              class="btn-quick-date-z text-[10px] px-2 py-1 bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition-colors text-gray-600"
+              data-range="yesterday">Ayer</button>
+            <button
+              class="btn-quick-date-z text-[10px] px-2 py-1 bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition-colors text-gray-600"
+              data-range="last7">Últimos 7 días</button>
+          </div>
+
+          <p id="cierreZHistoryStatus" class="text-sm text-gray-500 mb-2"></p>
+
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Fecha
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Sistema
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Apertura
+                </th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Notas
+                </th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody id="cierreZHistoryBody" class="bg-white divide-y divide-gray-200">
+              <!-- filas dinámicas -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer con paginación -->
+        <div
+          class="px-4 py-3 border-t text-xs text-gray-500 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <span class="block">
+            Haz clic en "Ver / Imprimir" para abrir el PDF del cierre.
+          </span>
+          <div class="flex items-center justify-end gap-2">
+            <span id="cierreZHistoryPaginationInfo" class="mr-2">
+              Página 1 de 1
+            </span>
+            <button type="button" id="cierreZHistoryPrev"
+              class="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              Anterior
+            </button>
+            <button type="button" id="cierreZHistoryNext"
+              class="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/initialSetup.js"></script>
+    <script src="/js/layout.js"></script>
+</body>
+
+</html>

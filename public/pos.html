@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POS | NexusPOS</title>
+  <link href="/css/output.css" rel="stylesheet">
+  <link href="/css/theme.css" rel="stylesheet">
+  <script src="/js/JsBarcode.all.min.js"></script>
+  <script src="/js/html5-qrcode.min.js"></script>
+</head>
+
+<body class="bg-gray-100 aurora-mesh h-screen flex flex-col overflow-hidden">
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark-mode');
+    }
+  </script>
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="flex-1 flex flex-col h-screen">
+
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+
+      <!-- COLUMNA IZQUIERDA: BUSCADOR Y RESULTADOS -->
+      <div class="w-full md:w-3/5 flex flex-col p-4 relative">
+        <!-- Buscador -->
+        <div class="relative mb-2">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <div id="reader-pos"
+            class="hidden w-full max-w-sm mx-auto mb-2 overflow-hidden rounded-lg border border-gray-300"></div>
+          <div class="flex space-x-2">
+            <input type="text" id="pos-search-input"
+              placeholder="Buscar por Nombre, Categoría, Proveedor o Cód. Barras..."
+              class="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-lg bg-white/80 backdrop-blur-sm">
+            <button type="button" id="btn-scan-camera-pos" title="Escanear con Cámara"
+              class="flex-shrink-0 p-3 tech-gradient-premium text-white rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                </path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Resultados de búsqueda -->
+        <div id="pos-search-results"
+          class="card-tech mt-2 p-2 space-y-1 absolute md:relative top-full left-0 right-0 z-50 md:z-auto h-[60vh] md:h-auto md:flex-1 overflow-y-auto hidden md:block">
+          <p id="search-placeholder" class="text-gray-400 text-center p-4">Escribe para buscar productos...</p>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA: CARRITO -->
+      <div class="w-full md:w-2/5 card-tech flex flex-col flex-1 min-h-0 md:h-full overflow-hidden !rounded-none md:!rounded-l-3xl">
+
+        <!-- Header carrito -->
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 class="text-xl font-bold text-gray-800">Carrito de Venta</h2>
+
+          <!-- Tasa BCV Display -->
+          <div id="pos-bcv-display"
+            class="hidden md:flex items-center px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-bold text-sm shadow-sm ml-4 mr-auto">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6">
+              </path>
+            </svg>
+            Tasa BCV: <span id="pos-bcv-value" class="ml-1">--</span>
+          </div>
+
+          <div class="flex space-x-2 ml-3">
+            <!-- Ventas en espera -->
+            <button id="btn-held-sales" title="Ventas en espera"
+              class="flex items-center text-sm bg-gray-600/20 text-gray-700 dark:text-gray-300 p-2.5 rounded-xl font-semibold hover:bg-gray-600 hover:text-white focus:outline-none transition-all border border-gray-200 dark:border-white/10">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+
+            <!-- Gestión de clientes -->
+            <button id="btn-manage-clients-pos" title="Gestionar clientes"
+              class="flex items-center text-sm bg-gray-600/20 text-gray-700 dark:text-gray-300 p-2.5 rounded-xl font-semibold hover:bg-gray-600 hover:text-white focus:outline-none transition-all border border-gray-200 dark:border-white/10">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M4.5 19.5A7.5 7.5 0 0 1 12 15a7.5 7.5 0 0 1 7.5 4.5" />
+              </svg>
+            </button>
+
+            <!-- Gestión de caja -->
+            <button id="btn-daily-close" title="Apertura y cierre de caja"
+              class="flex items-center text-sm tech-gradient-1 text-white p-2.5 rounded-xl font-semibold hover:scale-105 active:scale-95 transition-all shadow-md">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+              </svg>
+            </button>
+
+            <!-- Reimprimir facturas del día -->
+            <button id="btn-reprint-last-sale" title="Reimprimir facturas del día"
+              class="flex items-center text-sm bg-blue-600/20 text-blue-700 dark:text-blue-300 p-2.5 rounded-xl font-semibold hover:bg-blue-600 hover:text-white focus:outline-none transition-all border border-blue-200 dark:border-blue-900 shadow-sm ml-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+              </svg>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Lista carrito -->
+        <div id="pos-cart-items" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+          <p id="cart-empty-message" class="text-gray-500 text-center">El carrito está vacío</p>
+        </div>
+
+        <!-- Totales y botones principales -->
+        <div class="p-4 bg-gray-50 border-t border-gray-200">
+          <div class="space-y-2 mb-4">
+            <div id="pos-subtotal-container" class="flex justify-between text-sm text-gray-600 hidden">
+              <span>Subtotal:</span>
+              <span id="pos-subtotal-ves">0.00 Bs</span>
+            </div>
+            <div id="pos-discount-container" class="flex justify-between items-center text-sm text-red-600 hidden">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="pos-discount-check" class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                <span>Descuento (<span id="pos-discount-pct-label">0</span>%)</span>
+              </label>
+              <div class="flex items-center gap-1">
+                <span id="pos-discount-ves">-0.00 Bs</span>
+                <button id="btn-edit-discount" class="text-blue-500 hover:text-blue-700 p-1" title="Editar descuento">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div id="pos-tax-container" class="flex justify-between text-sm text-gray-600 hidden">
+              <span>IVA:</span>
+              <span id="pos-tax-ves">0.00 Bs</span>
+            </div>
+            <div class="flex justify-between text-xl font-semibold text-gray-800">
+              <span>Total (VES):</span>
+              <span id="pos-total-ves">0.00 Bs</span>
+            </div>
+            <div class="flex justify-between text-2xl font-bold text-gray-800">
+              <span>Total (USD-BCV):</span>
+              <span id="pos-total-usd">0.00 $</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <button id="btn-cancelar-venta"
+              class="w-full tech-gradient-debt text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50">
+              Cancelar
+            </button>
+            <button id="btn-presupuesto"
+              class="w-full tech-gradient-cash text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50">
+              Presupuesto
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btn-hold-sale"
+              class="w-full bg-orange-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-600 hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50">
+              En espera
+            </button>
+            <button id="btn-pagar"
+              class="w-full tech-gradient-profit text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50">
+              Cobrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL DESCUENTO -->
+  <!-- ===================== -->
+  <div id="discount-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" style="z-index: 10000 !important;">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-800">Descuento Global</h3>
+        <button id="btn-close-discount-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Porcentaje de descuento</label>
+      <div class="relative mb-4">
+        <input type="number" id="discount-input" min="0" max="100" step="0.01" value="0"
+          class="w-full border border-gray-300 rounded-lg px-4 py-3 text-2xl font-bold text-center focus:ring-2 focus:ring-red-500 focus:border-red-500 pr-10">
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl font-bold">%</span>
+      </div>
+      <p class="text-xs text-gray-500 mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+        Este porcentaje se aplicará al total de la venta actual.
+      </p>
+      <div class="flex gap-3">
+        <button id="btn-cancel-discount" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">Cancelar</button>
+        <button id="btn-save-discount" class="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-bold hover:from-red-600 hover:to-red-700 transition shadow-lg">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL PAGO -->
+  <!-- ===================== -->
+  <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    style="z-index: 9999 !important;">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Registrar Pago</h3>
+        <button id="btn-cancelar-pago" class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Totales -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-50 rounded-lg p-3 border">
+            <p class="text-sm text-gray-500">Total a pagar (VES)</p>
+            <div class="flex items-center justify-between">
+              <p id="modal-total-ves" class="text-2xl font-bold text-gray-800">0.00 Bs</p>
+              <div class="flex bg-gray-200 rounded-lg p-0.5 ml-2">
+                <button type="button" id="btn-round-down" title="Redondear Abajo (10)"
+                  class="px-2 py-1 rounded text-xs font-bold text-gray-600 hover:bg-white hover:text-red-600 transition-colors">↓</button>
+                <button type="button" id="btn-round-none" title="Exacto"
+                  class="px-2 py-1 rounded text-xs font-bold bg-white text-blue-600 shadow-sm border border-gray-300">=0</button>
+                <button type="button" id="btn-round-up" title="Redondear Arriba (10)"
+                  class="px-2 py-1 rounded text-xs font-bold text-gray-600 hover:bg-white hover:text-green-600 transition-colors">↑</button>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border">
+            <p class="text-sm text-gray-500">Total a pagar (USD)</p>
+            <p id="modal-total-usd" class="text-2xl font-bold text-gray-800">0.00 $</p>
+          </div>
+        </div>
+
+        <form id="form-pago" class="space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label for="pago-ves-efectivo" class="block text-sm font-medium text-gray-700">Pago VES (Efectivo)</label>
+              <div class="flex space-x-2">
+                <input id="pago-ves-efectivo" type="number" step="0.01"
+                  class="pago-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-pago-todo-ves"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="pago-usd-efectivo" class="block text-sm font-medium text-gray-700">Pago USD (Efectivo)</label>
+              <div class="flex space-x-2">
+                <input id="pago-usd-efectivo" type="number" step="0.01"
+                  class="pago-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-pago-todo-usd"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="pago-tarjeta" class="block text-sm font-medium text-gray-700">Tarjeta (Punto de Venta)</label>
+              <div class="flex space-x-2">
+                <input id="pago-tarjeta" type="number" step="0.01"
+                  class="pago-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-pago-todo-tarjeta"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="pago-biopago" class="block text-sm font-medium text-gray-700">Biopago (Sistema)</label>
+              <div class="flex space-x-2">
+                <input id="pago-biopago" type="number" step="0.01"
+                  class="pago-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-pago-todo-biopago"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="pago-zelle" class="block text-sm font-medium text-gray-700">Zelle (USD)</label>
+              <div class="flex space-x-2">
+                <input id="pago-zelle" type="number" step="0.01"
+                  class="pago-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-pago-todo-zelle"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="pago-pagomovil" class="block text-sm font-medium text-gray-700">Pago PagoMóvil (VES)</label>
+              <div class="flex space-x-2">
+                <input id="pago-pagomovil" type="number" step="0.01"
+                  class="pago-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-pago-todo-pagomovil"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo de Referencia -->
+          <div class="mt-3">
+            <label for="pago-referencia" class="block text-sm font-medium text-gray-700">Referencia de Pago (Opcional)</label>
+            <input id="pago-referencia" type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              placeholder="Nro. de Transferencia, Pago Móvil o Lote">
+          </div>
+
+          <!-- Faltante / Vuelto -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div id="faltante-container" class="hidden bg-red-50 border border-red-200 rounded-lg p-3">
+              <p class="text-xs font-semibold text-red-600 mb-1">Faltante</p>
+              <p class="text-sm text-red-700">
+                <span id="modal-faltante-ves">0.00 Bs</span> |
+                <span id="modal-faltante-usd">0.00 $</span>
+              </p>
+            </div>
+            <div id="vuelto-container" class="hidden bg-green-50 border border-green-200 rounded-lg p-3">
+              <p class="text-xs font-semibold text-green-600 mb-1">Vuelto a entregar</p>
+              <p class="text-sm text-green-700">
+                <span id="modal-vuelto-ves">0.00 Bs</span> |
+                <span id="modal-vuelto-usd">0.00 $</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Tasa de Indexación (Solo para crédito) -->
+          <div id="index-rate-container" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <label class="block text-xs font-bold text-gray-600 uppercase mb-2">Indexar crédito a tasa:</label>
+            <div class="flex space-x-6">
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="tasa-index-tipo" value="BCV"
+                  class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                <span class="ml-2 text-sm font-medium text-gray-700">BCV</span>
+              </label>
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="tasa-index-tipo" value="PARALELO"
+                  class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                <span class="ml-2 text-sm font-medium text-gray-700">Paralelo</span>
+              </label>
+            </div>
+            <p class="text-[11px] text-gray-500 mt-2 italic">El saldo pendiente se ajustará automáticamente según la
+              tasa seleccionada al momento de recibir abonos.</p>
+          </div>
+
+          <!-- Cliente -->
+
+          <div class="mt-3 space-y-2 relative">
+            <div class="flex justify-between items-center">
+              <label class="block text-sm font-medium text-gray-700">Cliente</label>
+              <button type="button" id="btn-add-new-client-pos"
+                class="text-xs px-2 py-1 rounded bg-slate-700 text-slate-100 hover:bg-slate-600 border border-slate-500 shadow-sm transition-colors">
+                + Nuevo cliente
+              </button>
+            </div>
+
+            <input type="text" id="client-search-payment" placeholder="Buscar cliente por nombre o cédula..."
+              class="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+
+            <!-- Contenedor para el dropdown (lo rellena JS, ya no está hidden) -->
+            <div id="client-search-results-payment" class="relative text-sm"></div>
+
+            <div id="selected-client-payment"
+              class="hidden mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 flex justify-between items-center">
+              <div>
+                <p class="text-sm font-semibold text-blue-800">
+                  Cliente: <span id="selected-client-name">—</span>
+                </p>
+                <p id="selected-client-balance-container" class="text-xs font-medium text-red-600 hidden">
+                  Saldo pendiente: <span id="selected-client-balance">0.00 $</span>
+                </p>
+                <input type="hidden" id="selected-client-id">
+              </div>
+              <button type="button" id="btn-remove-selected-client"
+                class="text-xs text-red-600 hover:text-red-800 font-medium">
+                Quitar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer modal pago -->
+      <div class="px-4 py-3 border-t bg-gray-50 flex justify-end space-x-3">
+        <button id="btn-guardar-fiado" type="button"
+          class="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-yellow-600 disabled:opacity-50">
+          Guardar como fiado
+        </button>
+        <button id="btn-completar-venta" type="button"
+          class="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-green-700 disabled:opacity-50">
+          Completar venta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL VUELTO (CAMBIO) -->
+  <!-- ===================== -->
+  <div id="change-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    style="z-index: 9999 !important;">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Registrar Vuelto</h3>
+        <button id="btn-close-change-modal"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-50 rounded-lg p-3 border">
+            <p class="text-sm text-gray-500">Vuelto total (VES)</p>
+            <p id="change-modal-total-ves" class="text-2xl font-bold text-gray-800">0.00 Bs</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 border">
+            <p class="text-sm text-gray-500">Vuelto total (USD)</p>
+            <p id="change-modal-total-usd" class="text-2xl font-bold text-gray-800">0.00 $</p>
+          </div>
+        </div>
+
+        <form id="form-change" class="space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label for="change-usd-efectivo" class="block text-sm font-medium text-gray-700">Entregar USD</label>
+              <div class="flex space-x-2">
+                <input id="change-usd-efectivo" type="number" step="0.01"
+                  class="change-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-change-todo-usd"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="change-ves-efectivo" class="block text-sm font-medium text-gray-700">Entregar VES</label>
+              <div class="flex space-x-2">
+                <input id="change-ves-efectivo" type="number" step="0.01"
+                  class="change-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-change-todo-ves"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="change-pagomovil" class="block text-sm font-medium text-gray-700">Entregar PagoMóvil</label>
+              <div class="flex space-x-2">
+                <input id="change-pagomovil" type="number" step="0.01"
+                  class="change-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                <button type="button" id="btn-change-todo-pm"
+                  class="mt-1 px-2 text-xs bg-gray-200 rounded hover:bg-gray-300">
+                  Todo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="change-remaining-container" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
+            <p class="text-xs font-semibold text-yellow-700 mb-1">Restante por asignar como vuelto</p>
+            <p class="text-sm text-yellow-800">
+              <span id="change-modal-remaining-ves">0.00 Bs</span>
+            </p>
+          </div>
+
+          <p id="change-status" class="text-xs text-gray-500 mt-2"></p>
+        </form>
+      </div>
+
+      <div class="px-4 py-3 border-t bg-gray-50 flex justify-end space-x-3">
+        <button id="btn-confirmar-vuelto" type="button"
+          class="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-green-700">
+          Confirmar vuelto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL CANTIDAD -->
+  <!-- ===================== -->
+  <div id="quantity-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    style="z-index: 9999 !important;">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 id="quantity-modal-title" class="text-lg font-semibold text-gray-800">Cantidad</h3>
+        <button id="btn-cancelar-cantidad" class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <form id="form-quantity" class="p-4 space-y-3">
+        <div>
+          <label for="quantity-modal-input" class="block text-sm font-medium text-gray-700">Cantidad</label>
+          <input id="quantity-modal-input" type="number" step="0.001" min="0.001"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <p id="quantity-modal-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btn-cancelar-cantidad-2"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-blue-600 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-blue-700">
+            Aceptar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL PRECIO (CAMBIO DE PRECIO POR LÍNEA) -->
+  <!-- ===================== -->
+  <div id="price-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    style="z-index: 9999 !important;">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 id="price-modal-title" class="text-lg font-semibold text-gray-800">Editar precio</h3>
+        <button id="btn-cancelar-precio" class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <form id="form-price" class="p-4 space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+          <select id="price-modal-moneda"
+            class="block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="VES">Bolívares (VES)</option>
+            <option value="USD_BCV">Dólares (USD BCV)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="price-modal-input" class="block text-sm font-medium text-gray-700">Nuevo precio</label>
+          <input id="price-modal-input" type="number" step="0.01" min="0"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <p id="price-modal-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btn-cancelar-precio-2"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-blue-600 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-blue-700">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL NUEVO CLIENTE -->
+  <!-- ===================== -->
+  <div id="client-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    style="z-index: 10001 !important;">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 id="client-modal-title" class="text-lg font-semibold text-gray-800">Nuevo cliente</h3>
+        <button id="btn-cancelar-client" class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <form id="form-client" class="p-4 space-y-3">
+        <input type="hidden" id="client-id">
+
+        <div>
+          <label for="client-nombre" class="block text-sm font-medium text-gray-700">Nombre completo</label>
+          <input id="client-nombre" type="text"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div>
+          <label for="client-cedula" class="block text-sm font-medium text-gray-700">Cédula / RIF</label>
+          <input id="client-cedula" type="text"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div>
+          <label for="client-telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+          <input id="client-telefono" type="text"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div>
+          <label for="client-direccion" class="block text-sm font-medium text-gray-700">Dirección</label>
+          <textarea id="client-direccion" rows="2"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+        </div>
+
+        <p id="client-modal-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btn-cancelar-client-2"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-blue-600 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-blue-700">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL GESTIONAR CLIENTES -->
+  <!-- ===================== -->
+  <div id="client-manage-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Gestión de clientes</h3>
+        <button id="btn-close-client-manage"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-3">
+          <div>
+            <label for="manage-client-search" class="block text-sm font-medium text-gray-700">Buscar cliente</label>
+            <input id="manage-client-search" type="text" placeholder="Nombre, cédula, teléfono..."
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+          </div>
+          <ul id="manage-client-results"
+            class="border border-gray-200 rounded-md bg-white max-h-72 overflow-y-auto text-sm divide-y"></ul>
+        </div>
+
+        <form id="form-client-manage" class="space-y-3">
+          <input type="hidden" id="manage-client-id">
+
+          <div>
+            <label for="manage-client-nombre" class="block text-sm font-medium text-gray-700">Nombre completo</label>
+            <input id="manage-client-nombre" type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+          </div>
+
+          <div>
+            <label for="manage-client-cedula" class="block text-sm font-medium text-gray-700">Cédula / RIF</label>
+            <input id="manage-client-cedula" type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+          </div>
+
+          <div>
+            <label for="manage-client-telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+            <input id="manage-client-telefono" type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+          </div>
+
+          <div>
+            <label for="manage-client-direccion" class="block text-sm font-medium text-gray-700">Dirección</label>
+            <textarea id="manage-client-direccion" rows="2"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"></textarea>
+          </div>
+
+          <p id="client-manage-status" class="text-xs text-gray-500"></p>
+
+          <div class="flex justify-between mt-2">
+            <button type="button" id="btn-cancel-client-manage"
+              class="bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-300">
+              Cerrar
+            </button>
+            <div class="space-x-2">
+              <button type="button" id="btn-delete-client"
+                class="bg-red-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-red-700">
+                Eliminar
+              </button>
+              <button type="button" id="btn-update-client"
+                class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-700">
+                Actualizar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL VENTAS EN ESPERA - NOMBRE -->
+  <!-- ===================== -->
+  <div id="hold-sale-client-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    style="z-index: 10001 !important;">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Guardar venta en espera</h3>
+        <button id="btn-cancel-hold-sale-client"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <label for="hold-sale-client-name" class="block text-sm font-medium text-gray-700">
+          Nombre o referencia de la venta
+        </label>
+        <input id="hold-sale-client-name" type="text" placeholder="Ej: Juan Pérez, Mesa 3, Pedido 104..."
+          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+
+        <p id="hold-sale-client-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button id="btn-cancel-hold-sale-client-2" type="button"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button id="btn-confirm-hold-sale-client" type="button"
+            class="bg-blue-600 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-blue-700">
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL LISTA VENTAS EN ESPERA -->
+  <!-- ===================== -->
+  <div id="hold-sales-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Ventas en espera</h3>
+        <button id="btn-close-hold-sales" class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4">
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <tbody id="hold-sales-list" class="divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+        <p id="hold-sales-status" class="mt-2 text-xs text-gray-500"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL REIMPRESIÓN DE FACTURAS DEL DÍA -->
+  <!-- ===================== -->
+  <div id="reprint-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">🖨️ Facturas del día</h3>
+        <button id="btn-close-reprint-modal" class="text-gray-500 hover:text-gray-700 focus:outline-none text-2xl leading-none">&times;</button>
+      </div>
+
+      <div class="px-4 pt-3 pb-2">
+        <input
+          type="text"
+          id="reprint-search-input"
+          placeholder="Buscar por Nº factura o nombre de cliente..."
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-4 pb-4">
+        <table class="min-w-full text-sm mt-2">
+          <thead>
+            <tr class="text-xs text-gray-500 uppercase border-b">
+              <th class="py-2 text-left w-14">Nº</th>
+              <th class="py-2 text-left">Cliente</th>
+              <th class="py-2 text-left w-16">Hora</th>
+              <th class="py-2 text-right w-24">Total Bs</th>
+              <th class="py-2 text-center w-20">Estado</th>
+              <th class="py-2 text-center w-24">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="reprint-sales-list" class="divide-y divide-gray-100"></tbody>
+        </table>
+        <p id="reprint-sales-status" class="mt-3 text-xs text-gray-400 text-center"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL CIERRE Z / GESTIÓN CAJA -->
+  <!-- ===================== -->
+  <div id="cierre-z-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Gestión de caja (Apertura / Cierre / Retiros)</h3>
+        <button id="btn-close-cierre-z" class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Resumen de apertura actual -->
+        <div id="cierre-z-opening-resumen"
+          class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-900">
+          <!-- Se rellena desde JS con la información de la apertura del día -->
+        </div>
+
+        <!-- Botones de acciones de caja -->
+        <!-- Botones de acciones de caja -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-open-cash-opening-modal"
+            class="w-full bg-green-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-green-700">
+            Apertura de caja
+          </button>
+          <button id="btn-open-withdrawal-modal"
+            class="w-full bg-yellow-500 text-white py-2 rounded-md text-sm font-semibold hover:bg-yellow-600">
+            Registrar retiro de efectivo
+          </button>
+          <button id="btn-open-advance-modal"
+            class="w-full bg-purple-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-purple-700">
+            Servicios
+          </button>
+          <button id="btn-imprimir-cierre-z"
+            class="w-full bg-gray-800 text-white py-2 rounded-md text-sm font-semibold hover:bg-gray-900">
+            Resumen / Cierre Z
+          </button>
+        </div>
+
+        <!-- Resumen de ventas y movimientos -->
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <h4 class="text-sm font-semibold text-gray-700 mb-2">Resumen del día</h4>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-xs text-gray-700">
+              <tbody id="cierre-z-summary-body">
+                <!-- Se llena desde JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Notas -->
+        <div>
+          <label for="cierre-z-notas" class="block text-sm font-medium text-gray-700 mb-1">
+            Notas de cierre
+          </label>
+          <textarea id="cierre-z-notas" rows="3"
+            class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            placeholder="Anote observaciones, incidencias, arqueos, etc."></textarea>
+        </div>
+
+        <p id="cierre-z-status" class="text-xs text-gray-500"></p>
+      </div>
+
+      <div class="px-4 py-3 border-t bg-gray-50 flex justify-end">
+        <button id="btn-close-cierre-z-2"
+          class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-300">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL REGISTRO DE RETIRO -->
+  <!-- ===================== -->
+  <div id="withdrawal-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Registrar retiro de efectivo</h3>
+        <button id="btn-close-withdrawal-modal"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <form id="form-withdrawal" class="p-4 space-y-3">
+        <div>
+          <label for="withdrawal-method" class="block text-sm font-medium text-gray-700">Método</label>
+          <select id="withdrawal-method"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="VES_EFECTIVO">Efectivo VES</option>
+            <option value="USD_EFECTIVO">Efectivo USD</option>
+            <option value="PAGOMOVIL">PagoMóvil (VES)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="withdrawal-amount" class="block text-sm font-medium text-gray-700">Monto</label>
+          <input id="withdrawal-amount" type="number" step="0.01" min="0"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div>
+          <label for="withdrawal-description" class="block text-sm font-medium text-gray-700">Descripción</label>
+          <textarea id="withdrawal-description" rows="2"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            placeholder="Ej: Retiro para depósito, gastos menores, etc."></textarea>
+        </div>
+
+        <p id="withdrawal-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btn-cancel-withdrawal"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-yellow-500 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-yellow-600">
+            Guardar retiro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL APERTURA DE CAJA -->
+  <!-- ===================== -->
+  <div id="cash-opening-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Apertura de caja</h3>
+        <button id="btn-close-cash-opening-modal"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <form id="form-cash-opening" class="p-4 space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label for="cash-opening-ves" class="block text-sm font-medium text-gray-700">
+              Fondo en VES
+            </label>
+            <input id="cash-opening-ves" type="number" step="0.01" min="0"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label for="cash-opening-usd" class="block text-sm font-medium text-gray-700">
+              Fondo en USD
+            </label>
+            <input id="cash-opening-usd" type="number" step="0.01" min="0"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+        </div>
+
+        <div>
+          <label for="cash-opening-notes" class="block text-sm font-medium text-gray-700">
+            Notas
+          </label>
+          <textarea id="cash-opening-notes" rows="2"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            placeholder="Ej: Billetes contados, arqueo inicial, etc."></textarea>
+        </div>
+
+        <p id="cash-opening-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btn-cancel-cash-opening"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-green-600 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-green-700">
+            Guardar apertura
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL VERIFICACIÓN ADMIN -->
+  <!-- ===================== -->
+  <div id="admin-password-modal"
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Confirmación de administrador</h3>
+        <button id="btn-close-admin-password"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <form id="form-admin-password" class="p-4 space-y-3">
+        <div>
+          <label for="admin-password-input" class="block text-sm font-medium text-gray-700">
+            Contraseña de administrador
+          </label>
+          <input id="admin-password-input" type="password"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <p id="admin-password-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btn-cancel-admin-password"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-red-600 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-red-700">
+            Confirmar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+  <!-- ===================== -->
+  <!-- (Opcional) MODAL MÓVIL / QR (para acceso móvil al POS) -->
+  <!-- ===================== -->
+  <div id="mobile-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Acceso móvil</h3>
+        <button id="close-mobile-modal" class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <div class="p-4 space-y-3 text-sm">
+        <p>Escanee el siguiente código QR desde su teléfono para abrir el POS móvil en la misma red.</p>
+
+        <div id="qr-code-loading" class="text-xs text-gray-500">
+          Generando QR...
+        </div>
+
+        <div class="flex justify-center">
+          <img id="qr-code-image" alt="QR POS móvil" class="w-48 h-48 hidden">
+        </div>
+
+        <div>
+          <p class="font-semibold text-gray-700 mb-1">URL locales detectadas:</p>
+          <ul id="local-ip-urls" class="text-xs text-gray-600 space-y-1"></ul>
+        </div>
+      </div>
+
+      <div class="px-4 py-3 border-t bg-gray-50 flex justify-end">
+        <button id="close-mobile-modal-btn"
+          class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-300">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODAL AVANCE / CANJE DE EFECTIVO -->
+  <!-- ===================== -->
+  <div id="advance-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-4 py-3 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Avance / Canje de Efectivo</h3>
+        <button id="btn-close-advance-modal"
+          class="text-gray-500 hover:text-gray-700 focus:outline-none">&times;</button>
+      </div>
+
+      <form id="form-advance" class="p-4 space-y-3">
+        <div>
+          <label for="advance-amount-out" class="block text-sm font-medium text-gray-700">Monto efectivo a entregar
+            (Bs)</label>
+          <input id="advance-amount-out" type="number" step="0.01" min="0" placeholder="0.00"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-lg">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="advance-fee-percent" class="block text-sm font-medium text-gray-700">Comisión (%)</label>
+            <input id="advance-fee-percent" type="number" step="0.1" min="0" placeholder="Ej: 10"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label for="advance-fee-amount" class="block text-sm font-medium text-gray-700">Monto Comisión (Bs)</label>
+            <input id="advance-fee-amount" type="number" step="0.01" min="0" placeholder="0.00"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+              readonly>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+          <p class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Total a cobrar al cliente</p>
+          <p id="advance-total-in-display" class="text-2xl font-bold text-blue-800">0.00 Bs</p>
+          <input type="hidden" id="advance-total-in">
+        </div>
+
+        <div>
+          <label for="advance-method-in" class="block text-sm font-medium text-gray-700">Método de cobro</label>
+          <select id="advance-method-in"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="TARJETA">Punto de Venta (Tarjeta)</option>
+            <option value="PAGOMOVIL">PagoMóvil</option>
+            <option value="USD_EFECTIVO">Efectivo USD (Divisas)</option>
+          </select>
+        </div>
+
+        <div>
+           <label for="advance-reference" class="block text-sm font-medium text-gray-700">Referencia (Opcional)</label>
+           <input type="text" id="advance-reference"
+             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+             placeholder="Número de transferencia/pago móvil">
+        </div>
+
+        <div>
+          <label for="advance-description" class="block text-sm font-medium text-gray-700">Descripción
+            (Opcional)</label>
+          <textarea id="advance-description" rows="2"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            placeholder="Notas adicionales..."></textarea>
+        </div>
+
+        <p id="advance-status" class="text-xs text-gray-500"></p>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btn-cancel-advance"
+            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-purple-600 text-white px-4 py-1 rounded-md text-sm font-semibold hover:bg-purple-700">
+            Procesar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/pos.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Compras | NexusPOS</title>
+    <link href="/css/output.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-100 font-sans leading-normal tracking-normal min-h-screen">
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        <main class="flex-1 overflow-y-auto p-4 md:p-6">
+            <div class="max-w-7xl mx-auto flex flex-col h-full">
+                
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+                            Historial de Compras
+                        </h1>
+                        <p class="text-gray-500 dark:text-gray-400 mt-1">Consulta y reimprime tus facturas de compra registradas.</p>
+                    </div>
+                    <a href="compras.html" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Registrar Nueva Compra
+                    </a>
+                </div>
+
+                <!-- Filtros Separados (Fechas y Búsqueda) -->
+                <div class="flex flex-col lg:flex-row items-start gap-4 mb-4">
+                    
+                    <!-- Bloque de Fechas -->
+                    <div class="flex flex-col gap-3 w-full lg:w-auto">
+                        <div class="flex flex-wrap items-center gap-2 bg-white dark:bg-[#0f172a] p-1.5 sm:p-2 rounded-xl border border-gray-300 dark:border-white/10 shadow-md w-fit overflow-hidden">
+                            <span class="text-xs font-bold text-gray-400 uppercase ml-2 select-none hidden sm:block">Filtrar:</span>
+                            
+                            <div class="flex items-center gap-1">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Desde</label>
+                                <input type="date" id="filter-date-start"
+                                    class="text-sm border-0 focus:ring-0 text-gray-800 dark:text-white bg-gray-50 dark:bg-black/20 rounded p-1 w-28 sm:w-32 font-medium outline-none">
+                            </div>
+                            
+                            <div class="flex items-center gap-1 border-l border-gray-200 dark:border-white/10 pl-2">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Hasta</label>
+                                <input type="date" id="filter-date-end"
+                                    class="text-sm border-0 focus:ring-0 text-gray-800 dark:text-white bg-gray-50 dark:bg-black/20 rounded p-1 w-28 sm:w-32 font-medium outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Botones Rápidos -->
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn-quick-date text-[10px] px-3 py-1.5 bg-white dark:bg-[#0f172a] border border-gray-300 dark:border-white/10 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-300 font-bold shadow-sm"
+                                data-range="today">Hoy</button>
+                            <button class="btn-quick-date text-[10px] px-3 py-1.5 bg-white dark:bg-[#0f172a] border border-gray-300 dark:border-white/10 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-300 font-bold shadow-sm"
+                                data-range="yesterday">Ayer</button>
+                            <button class="btn-quick-date text-[10px] px-3 py-1.5 bg-white dark:bg-[#0f172a] border border-gray-300 dark:border-white/10 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-300 font-bold shadow-sm"
+                                data-range="last7">Últimos 7 días</button>
+                        </div>
+                    </div>
+
+                    <!-- Bloque de Búsqueda -->
+                    <div class="flex flex-col gap-3 w-full flex-1">
+                        <div class="flex items-center gap-2 bg-white dark:bg-[#0f172a] p-1.5 sm:p-2 rounded-xl border border-gray-300 dark:border-white/10 shadow-md h-[44px] overflow-hidden">
+                            <span class="text-xs font-bold text-gray-400 uppercase ml-2 select-none hidden sm:block">Buscar:</span>
+                            <input type="text" id="filter-invoice" placeholder="Factura, RIF o Nombre de Proveedor..." 
+                                class="flex-1 text-sm border-0 focus:ring-0 text-gray-800 dark:text-white bg-gray-50 dark:bg-black/20 rounded p-2 font-medium outline-none">
+                            
+                            <button id="btn-filter"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm font-bold text-xs flex items-center gap-2 shrink-0">
+                                <i class="fas fa-search"></i> BUSCAR
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-gray-400 font-medium ml-2 uppercase tracking-wider">Puedes buscar por número de factura, RIF del proveedor o su nombre.</p>
+                    </div>
+
+                </div>
+
+                <!-- Tabla -->
+                <div style="border-radius: 1rem; overflow: hidden; flex: 1; min-height: 0;" class="bg-white dark:bg-[#0f172a] shadow-lg border border-gray-300 dark:border-white/10 flex flex-col">
+                    <div class="overflow-y-auto flex-1">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-50 dark:bg-white/5">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">N° Compra</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Factura / Control</th>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proveedor</th>
+                                    <th class="px-4 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">USD</th>
+                                    <th class="px-4 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">VES</th>
+                                    <th class="px-4 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tasa</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchases-table-body" class="divide-y divide-gray-100 dark:divide-gray-700">
+                                <!-- Cargado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="no-results" class="hidden py-12 text-center text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-search mb-3 text-3xl opacity-20"></i>
+                        <p>No se encontraron compras con los filtros aplicados.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/date-utils.js"></script>
+    <script src="/js/historial_compras.js"></script>
+</body>
+
+</html>
