@@ -1,0 +1,16 @@
+node_modules/
+dis_final/
+build_final/
+build_final_old/
+NexusPOS_Portable/
+*.exe
+*.msi
+*.dll
+Generator-Portable/
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env
+cloudflared.exe

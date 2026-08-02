@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nexuspos
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node render.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXUS_DATA_DIR
+        value: /tmp/nexuspos-data
+    healthCheckPath: /api/health
