@@ -211,19 +211,27 @@
                                     <span class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/70">Caja Operativa</span>
                                     <div class="p-4 tech-gradient-cash rounded-2xl shadow-lg shadow-blue-500/40 text-white animate-pulse"><i class="fa-solid fa-vault text-xl"></i></div>
                                 </div>
-                                <p class="text-xs font-black text-gray-500 uppercase mb-1">Dinero Cobrado</p>
-                                <h2 id="stat-revenue-ves" class="indicator-val text-3xl font-black text-glow-blue">0.00 Bs</h2>
-                                <div class="mt-auto pt-4 flex flex-col gap-1 border-t border-gray-100 dark:border-white/5">
+                                <p class="text-xs font-black text-gray-500 uppercase mb-1">Dinero Cobrado Hoy</p>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h2 id="stat-revenue-ves" class="indicator-val text-2xl font-black text-glow-blue">0.00 Bs</h2>
+                                    <span id="stat-revenue-usd" class="text-lg font-black text-blue-300">0.00 $</span>
+                                </div>
+                                <div class="mt-auto pt-4 flex flex-col gap-1.5 border-t border-gray-100 dark:border-white/5 text-[11px]">
                                     <div class="flex items-center justify-between">
-                                        <span id="stat-revenue-usd" class="text-sm font-black text-blue-600">0.00 $</span>
+                                        <span class="text-gray-500 uppercase tracking-tighter">Ventas Hoy (Bs):</span>
+                                        <span id="stat-revenue-ventas" class="font-bold text-blue-600">0.00 Bs</span>
                                     </div>
-                                    <div class="flex items-center justify-between text-[10px] font-bold opacity-70">
-                                        <span class="text-gray-500 uppercase tracking-tighter">Ventas Hoy:</span>
-                                        <span id="stat-revenue-ventas" class="text-blue-600">0.00 Bs</span>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-500 uppercase tracking-tighter">Ventas Hoy ($):</span>
+                                        <span id="stat-revenue-ventas-usd" class="font-bold text-blue-400">0.00 $</span>
                                     </div>
-                                    <div class="flex items-center justify-between text-[10px] font-bold opacity-70">
-                                        <span class="text-gray-500 uppercase tracking-tighter">Abonos Recibidos:</span>
-                                        <span id="stat-revenue-abonos" class="text-indigo-600">0.00 Bs</span>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-500 uppercase tracking-tighter">Abonos Hoy (Bs):</span>
+                                        <span id="stat-revenue-abonos" class="font-bold text-indigo-600">0.00 Bs</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-500 uppercase tracking-tighter">Abonos Hoy ($):</span>
+                                        <span id="stat-revenue-abonos-usd" class="font-bold text-indigo-400">0.00 $</span>
                                     </div>
                                 </div>
                             </div>

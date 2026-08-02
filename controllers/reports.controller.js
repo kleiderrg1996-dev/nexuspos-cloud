@@ -376,6 +376,12 @@ const getTodayDashboardStatsStmt_Ventas = db.prepare(`
      WHERE date(v2.creado_en) = date('now', 'localtime') 
        AND v2.estado_pago != 'ANULADO'
     ) as total_cobrado_usd,
+    (SELECT SUM(CASE WHEN vp.metodo IN ('USD_EFECTIVO', 'ZELLE') THEN vp.monto_recibido ELSE 0 END)
+     FROM venta_pagos vp 
+     JOIN ventas v2 ON vp.venta_id = v2.id 
+     WHERE date(v2.creado_en) = date('now', 'localtime') 
+       AND v2.estado_pago != 'ANULADO'
+    ) as total_ventas_hoy_usd,
     SUM((SELECT SUM(COALESCE(costo_unitario_ves, 0) * COALESCE(cantidad, 0)) FROM venta_productos vp WHERE vp.venta_id = v.id)) as total_costo_ves
   FROM ventas v
   WHERE date(creado_en) = date('now', 'localtime')
@@ -1825,7 +1831,9 @@ const getTodayDashboardStats = (req, res) => {
       total_cobrado_ves: Number(totalCobradoVes.toFixed(2)),
       total_cobrado_usd: Number(totalCobradoUsd.toFixed(2)),
       total_ventas_hoy_ves: Number((statsVentas.total_cobrado_ventas_hoy || 0).toFixed(2)),
+      total_ventas_hoy_usd: Number((statsVentas.total_ventas_hoy_usd || 0).toFixed(2)),
       total_abonos_hoy_ves: Number((statsAbonos.total_abonos_hoy || 0).toFixed(2)),
+      total_abonos_hoy_usd: Number((statsAbonos.total_abonos_usd || 0).toFixed(2)),
       total_gastos_hoy_ves: Number(totalEgresosVes.toFixed(2)),
       total_gastos_hoy_usd: Number(totalEgresosUsd.toFixed(2))
     });

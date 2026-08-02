@@ -367,9 +367,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statRevenueUsd) statRevenueUsd.textContent = `${revenueTotalUsd.toLocaleString('en-US', {style:'currency', currency:'USD'})}`;
 
         const revenueVentas = dashboardStats.total_ventas_hoy_ves || 0;
+        const revenueVentasUsd = dashboardStats.total_ventas_hoy_usd || 0;
         const revenueAbonos = dashboardStats.total_abonos_hoy_ves || 0;
+        const revenueAbonosUsd = dashboardStats.total_abonos_hoy_usd || 0;
         if (statRevenueVentas) statRevenueVentas.textContent = `${revenueVentas.toLocaleString('es-VE', {minimumFractionDigits:2})} Bs`;
+        const statRevenueVentasUsd = document.getElementById('stat-revenue-ventas-usd');
+        if (statRevenueVentasUsd) statRevenueVentasUsd.textContent = `${revenueVentasUsd.toLocaleString('en-US', {style:'currency', currency:'USD'})}`;
         if (statRevenueAbonos) statRevenueAbonos.textContent = `${revenueAbonos.toLocaleString('es-VE', {minimumFractionDigits:2})} Bs`;
+        const statRevenueAbonosUsd = document.getElementById('stat-revenue-abonos-usd');
+        if (statRevenueAbonosUsd) statRevenueAbonosUsd.textContent = `${revenueAbonosUsd.toLocaleString('en-US', {style:'currency', currency:'USD'})}`;
 
         // --- CALCULO DE VOLUMEN Y TICKET PROMEDIO ---
         const successfulSalesCount = sales.filter(s => s.estado_pago !== 'ANULADO').length;
