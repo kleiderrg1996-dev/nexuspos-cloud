@@ -107,40 +107,61 @@
             <!-- Resumen -->
             <div class="bg-white p-6 rounded-lg shadow-md">
               <h2 class="text-xl font-semibold text-gray-800 mb-4">Resumen de la Venta</h2>
-              <div class="space-y-3">
+              
+              <!-- Precios -->
+              <div class="space-y-2 text-sm">
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Subtotal (Bs):</span>
-                  <span id="summary-subtotal" class="font-semibold text-gray-900"></span>
+                  <span class="text-gray-600">Subtotal:</span>
+                  <span id="summary-subtotal" class="text-gray-900"></span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">IVA (Bs):</span>
-                  <span id="summary-iva" class="font-semibold text-gray-900"></span>
+                  <span class="text-gray-600">IVA:</span>
+                  <span id="summary-iva" class="text-gray-900"></span>
                 </div>
                 <div id="discount-row" class="flex justify-between hidden">
-                  <span class="text-red-500">Descuento:</span>
-                  <span id="summary-descuento" class="font-semibold text-red-500"></span>
+                  <span class="text-red-500 font-medium">Descuento:</span>
+                  <span id="summary-descuento" class="font-medium text-red-500"></span>
                 </div>
+                <hr class="my-1">
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Total Venta (Bs):</span>
+                  <span class="text-gray-600">Total Venta:</span>
                   <span id="summary-total-ves" class="font-semibold text-gray-900 text-right flex flex-col items-end"></span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-gray-600">Total Venta ($):</span>
                   <span id="summary-total-usd" class="font-semibold text-gray-900"></span>
                 </div>
-                <hr>
+              </div>
+
+              <!-- Pagos -->
+              <hr class="my-3">
+              <div class="space-y-2 text-sm">
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Total Pagado (Bs):</span>
+                  <span class="text-gray-600">Total Pagado:</span>
                   <span id="summary-total-pagado" class="font-semibold text-green-600"></span>
                 </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Deuda Actualizada (Bs):</span>
-                  <span id="summary-total-pendiente-ves" class="font-bold text-2xl text-red-600"></span>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Deuda Actualizada:</span>
+                  <span id="summary-total-pendiente-ves" class="font-semibold text-red-600"></span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Total Pendiente ($):</span>
-                  <span id="summary-total-pendiente-usd" class="font-bold text-lg text-red-600"></span>
+                  <span class="text-gray-600">Pendiente ($):</span>
+                  <span id="summary-total-pendiente-usd" class="font-semibold text-red-600"></span>
                 </div>
+              </div>
+
+              <!-- Estado -->
+              <hr class="my-3">
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Estado:</span>
+                  <span id="summary-estado" class="font-semibold"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Fecha:</span>
+                  <span id="summary-fecha" class="font-semibold text-gray-900"></span>
+                </div>
+              </div>
                 <!-- Explicación de Tasa y Conversión (Solo visible si hay saldo pendiente) -->
                 <div id="rate-explanation-box" class="hidden mt-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg text-xs space-y-1.5">
                   <div class="flex items-center gap-1.5 text-red-800 dark:text-red-300 font-semibold mb-1">
@@ -157,16 +178,6 @@
                     <span id="exp-formula" class="font-mono bg-red-100 dark:bg-red-950/60 px-2 py-0.5 rounded text-xs"></span>
                   </div>
                 </div>
-                <hr>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Estado:</span>
-                  <span id="summary-estado" class="font-semibold text-gray-900"></span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Fecha:</span>
-                  <span id="summary-fecha" class="font-semibold text-gray-900"></span>
-                </div>
-              </div>
             </div>
 
             <!-- Cliente -->
