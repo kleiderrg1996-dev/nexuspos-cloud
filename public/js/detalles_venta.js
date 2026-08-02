@@ -466,6 +466,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const rate = (sale.total_usd_bcv > 0) ? (sale.total_ves / sale.total_usd_bcv) : 1;
+
         products.forEach(p => {
             const tr = document.createElement('tr');
 
@@ -478,12 +480,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const cantidad = safeNumber(p.cantidad, 0);
             const precioUnitario = safeNumber(p.precio_unitario_ves, 0);
             const totalItem = cantidad * precioUnitario;
+            const precioUnitUsd = rate > 0 ? precioUnitario / rate : 0;
+            const totalItemUsd = rate > 0 ? totalItem / rate : 0;
 
             tr.innerHTML = `
                 <td class="px-4 py-3 text-sm text-gray-900">${nombreProducto}</td>
                 <td class="px-4 py-3 text-sm text-gray-600 text-right">${cantidad}</td>
                 <td class="px-4 py-3 text-sm text-gray-600 text-right">${precioUnitario.toFixed(2)}</td>
+                <td class="px-4 py-3 text-sm text-gray-500 text-right">${precioUnitUsd.toFixed(2)} $</td>
                 <td class="px-4 py-3 text-sm text-gray-900 font-medium text-right">${totalItem.toFixed(2)}</td>
+                <td class="px-4 py-3 text-sm text-gray-500 font-medium text-right">${totalItemUsd.toFixed(2)} $</td>
             `;
             productsTableBody.appendChild(tr);
         });
