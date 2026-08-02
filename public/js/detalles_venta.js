@@ -207,6 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderSummary(sale, payments = [], abonos = []) {
         if (!sale) return;
 
+        const rate = (sale.total_usd_bcv > 0) ? (sale.total_ves / sale.total_usd_bcv) : 1;
+
         // Fecha
         const creadoEn = sale.creado_en || sale.created_at || null;
         if (summaryFecha && creadoEn) {
@@ -253,10 +255,12 @@ document.addEventListener('DOMContentLoaded', () => {
             summaryTotalVes.innerHTML = `<span>${totalVesOriginal.toFixed(2)} Bs</span>${originalRateHtml}`;
         }
         if (summarySubtotal) {
-            summarySubtotal.textContent = `${subtotalVes.toFixed(2)} Bs`;
+            const subtotalUsd = rate > 0 ? subtotalVes / rate : 0;
+            summarySubtotal.innerHTML = `${subtotalVes.toFixed(2)} Bs <span class="text-xs text-gray-400">(${subtotalUsd.toFixed(2)} $)</span>`;
         }
         if (summaryIva) {
-            summaryIva.textContent = `${impuestoTotal.toFixed(2)} Bs`;
+            const ivaUsd = rate > 0 ? impuestoTotal / rate : 0;
+            summaryIva.innerHTML = `${impuestoTotal.toFixed(2)} Bs <span class="text-xs text-gray-400">(${ivaUsd.toFixed(2)} $)</span>`;
         }
         if (summaryTotalUsd) {
             summaryTotalUsd.textContent = `${totalUsdOriginal.toFixed(2)} $`;
