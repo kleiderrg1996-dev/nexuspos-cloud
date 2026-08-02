@@ -627,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Update POS Header Display
       const posBcvValue = document.getElementById('pos-bcv-value');
       if (posBcvValue && currentRates && currentRates.BCV) {
-        posBcvValue.textContent = currentRates.BCV.toFixed(4) + ' Bs';
+        posBcvValue.textContent = currentRates.BCV.toFixed(2) + ' Bs';
         // Remove hidden class from parent if needed (it usually is visible on md screens)
         const posBcvDisplay = document.getElementById('pos-bcv-display');
         if (posBcvDisplay) posBcvDisplay.classList.remove('hidden');
