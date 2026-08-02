@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderSummary(sale, payments, abonos);
         renderClient(cliente);
-        renderProducts(products);
+        renderProducts(products, sale);
         renderPayments(sale, payments, abonos);
     }
 
@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---------- Productos ----------
 
-    function renderProducts(products = []) {
+    function renderProducts(products = [], sale = {}) {
         if (!productsTableBody) return;
 
         productsTableBody.innerHTML = '';
