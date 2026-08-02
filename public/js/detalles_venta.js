@@ -243,7 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (descuentoVes > 0 && discountRow && summaryDescuento) {
             discountRow.classList.remove('hidden');
             const pctLabel = descuentoPct > 0 ? ` (${descuentoPct}%)` : '';
-            summaryDescuento.textContent = `-${descuentoVes.toFixed(2)} Bs${pctLabel}`;
+            const descuentoUsd = rate > 0 ? descuentoVes / rate : 0;
+            summaryDescuento.innerHTML = `-${descuentoVes.toFixed(2)} Bs (${descuentoUsd.toFixed(2)} $)${pctLabel}`;
         }
 
         if (summaryTotalVes) {
