@@ -231,7 +231,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2) Total en Bs histórico de la venta
         const totalVesOriginal = safeNumber(sale.total_ves, 0);
         const impuestoTotal = safeNumber(sale.impuesto_total, 0);
-        const subtotalVes = totalVesOriginal - impuestoTotal;
+        const descuentoVes = safeNumber(sale.descuento_ves, 0);
+        const descuentoPct = safeNumber(sale.descuento_pct, 0);
+        const subtotalVes = totalVesOriginal + descuentoVes - impuestoTotal;
+
+        // Show discount row if applicable
+        const discountRow = document.getElementById('discount-row');
+        const summaryDescuento = document.getElementById('summary-descuento');
+        if (descuentoVes > 0 && discountRow && summaryDescuento) {
+            discountRow.classList.remove('hidden');
+            const pctLabel = descuentoPct > 0 ? ` (${descuentoPct}%)` : '';
+            summaryDescuento.textContent = `-${descuentoVes.toFixed(2)} Bs${pctLabel}`;
+        }
 
         if (summaryTotalVes) {
             let originalRateHtml = '';
